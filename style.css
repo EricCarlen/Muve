@@ -1,0 +1,25 @@
+body {
+    background-color: #000000;  /* Pure black */
+    color: #ffffff;             /* Pure white */
+    text-align: center;           /* Centers the text */
+    padding-top: 100px;           /* Pushes text down from the top */
+}
+
+h1 {
+    font-size: 80px;              /* Makes 'Muve' big and bold */
+    letter-spacing 5px;           /* Adds space between letter for a 'brand' look*/
+}
+button{
+    background-color: #ffffff;  /* White button */
+    color: #000000;             /* Black text */
+    padding: 15px 30px;           /* Size of the button */
+    font-size: 18px;
+    border: none;
+    border-radius: 50px;          /* Rounded edges */
+    cursor: pointer;              /* Shows the 'hand' icon on hover */
+    transition: 0.3s;             /* Smooth color change */
+}
+
+button:hover {
+    background-color: #00ffcc; /* Turns neon green when you hover! */
+}
