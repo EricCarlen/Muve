@@ -30,3 +30,32 @@ button:hover {
     padding: 0 20px;   /* Adds a little space so text doesn't hit the screen edges */
   }
 }
+/* The Container: Centers everything and adds spacing */
+.workout-grid {
+    display: flex;
+    flex-direction: column; /* Stacks cards vertically for mobile */
+    gap: 20px;
+    padding: 20px;
+    max-width: 500px;
+    margin: 0 auto; /* Centers the whole list */
+}
+
+/* The Card: The white box for each workout */
+.card {
+    background: #f4f4f4;
+    padding: 20px;
+    border-radius: 15px; /* Rounded corners make it look like an app */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    border-left: 8px solid #333; /* A little accent color stripe */
+}
+
+.card h3 {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.card p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #666;
+}
