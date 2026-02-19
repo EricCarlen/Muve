@@ -23,3 +23,10 @@ button{
 button:hover {
     background-color: #00ffcc; /* Turns neon green when you hover! */
 }
+/* This only triggers when the screen is narrower than 600px */
+@media (max-width: 600px) {
+  h1 {
+    font-size: 2.5rem; /* Makes the title smaller on phones */
+    padding: 0 20px;   /* Adds a little space so text doesn't hit the screen edges */
+  }
+}
