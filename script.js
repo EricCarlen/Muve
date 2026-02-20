@@ -1,10 +1,23 @@
 // 1. DATA FIRST (The list of workouts)
 const workouts = [
-    { name: "Sun Salutation", category: "Stretch", timeOfDay: "morning" },
-    { name: "Morning Flow", category: "Animal Movement", timeOfDay: "morning" },
-    { name: "Power Lunch Squats", category: "Lower Body", timeOfDay: "midday" },
-    { name: "Core Crusher", category: "Core", timeOfDay: "afternoon" },
-    { name: "Evening Zen", category: "Meditate", timeOfDay: "evening" }
+    // MORNING (3am - 11am)
+    { name: "Sunrise Stretch", category: "Stretch", timeOfDay: "morning" },
+    { name: "Primal Flow", category: "Animal Movement", timeOfDay: "morning" },
+    { name: "Morning Core Wakeup", category: "Core", timeOfDay: "morning" },
+
+    // MIDDAY (11am - 2pm)
+    { name: "Lunchtime Leg Blast", category: "Lower Body", timeOfDay: "midday" },
+    { name: "Office Desk Stretch", category: "Stretch", timeOfDay: "midday" },
+
+    // AFTERNOON (2pm - 6pm)
+    { name: "Afternoon Power", category: "Upper Body", timeOfDay: "afternoon" },
+    { name: "Crawl & Climb", category: "Animal Movement", timeOfDay: "afternoon" },
+    { name: "Core Strength II", category: "Core", timeOfDay: "afternoon" },
+
+    // EVENING (6pm - 3am)
+    { name: "Evening Zen", category: "Meditate", timeOfDay: "evening" },
+    { name: "Deep Tissue Release", category: "Stretch", timeOfDay: "evening" },
+    { name: "Nightly Reflection", category: "Meditate", timeOfDay: "evening" }
 ];
 
 // 2. THE BRAIN (The function that does the work)
@@ -40,6 +53,10 @@ function updateGreeting() {
         if (workout.timeOfDay === currentTimeOfDay) {
             const card = document.createElement("div");
             card.className = "card";
+            // This turns "Animal Movement" into "category-animal-movement"
+            const categoryClass = "category-" + workout.category.toLowerCase().replace(" ", "-");
+            card.classList.add(categoryClass);
+            
             card.innerHTML = `
                 <h3>${workout.name}</h3>
                 <p>Category: ${workout.category}</p>

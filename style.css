@@ -59,3 +59,12 @@ button:hover {
     font-size: 0.9rem;
     color: #666;
 }
+/* Specific colors based on Category */
+/* We will use JavaScript to add these classes in the next step! */
+
+.category-stretch { border-left-color: #74ebd5; }      /* Teal */
+.category-animal-movement { border-left-color: #f6d365; } /* Gold */
+.category-core { border-left-color: #ff9a9e; }         /* Pink/Red */
+.category-lower-body { border-left-color: #a1c4fd; }   /* Blue */
+.category-upper-body { border-left-color: #fdcfb4; }   /* Orange */
+.category-meditate { border-left-color: #d4fc79; }     /* Light Green */
