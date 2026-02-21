@@ -68,3 +68,30 @@ button:hover {
 .category-lower-body { border-left-color: #a1c4fd; }   /* Blue */
 .category-upper-body { border-left-color: #fdcfb4; }   /* Orange */
 .category-meditate { border-left-color: #d4fc79; }     /* Light Green */
+.filter-wrapper {
+    overflow-x: auto; /* Enables horizontal scroll */
+    white-space: nowrap;
+    padding: 10px 20px;
+    -webkit-overflow-scrolling: touch; /* Makes scrolling smooth on iPhone */
+}
+
+.filter-container {
+    display: inline-flex;
+    gap: 10px;
+}
+
+.filter-btn {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px solid #ddd;
+    background: white;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.filter-btn.active {
+    background: #333;
+    color: white;
+    border-color: #333;
+}

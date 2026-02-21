@@ -21,49 +21,50 @@ const workouts = [
 ];
 
 // 2. THE BRAIN (The function that does the work)
-function updateGreeting() {
-    // 1. Get the current hour (0 to 23)
+function displayWorkouts(filter = 'all') {
     const hour = new Date().getHours();
-    const greetingElement = document.getElementById("greeting");
-
-    // 2. Decide what to say based on the time
-    let message = "";
-
-    if (hour >= 3 && hour < 11) {
-        message = "Good Morning, Let's get Muveing!";
-    } else if (hour >= 11 && hour < 14) {
-        message = "Goodonya, Muvement before food, nom nom...";
-    } else if (hour >= 14 && hour < 18) {
-        message = "Good Afternoon, Muve it!";
-    } else {
-        message = "Good Evening, Relax and MuveZzz.."
-    }
-    // 3. Put that message into our HTML "id"
-    greetingElement.innerText = message;
     const container = document.getElementById("workout-container");
-    container.innerHTML = ""; // Clear the container first
+    
+    // This clears the cards before drawing new ones
+    container.innerHTML = ""; 
 
-    // Look through all workouts and find ones that match the current timeOfDay
-    // (Note: You'll need to match the 'timeOfDay' logic from our earlier If/Else)
+    // Determine current time period
     const currentTimeOfDay = (hour >= 3 && hour < 11) ? "morning" : 
                              (hour >= 11 && hour < 14) ? "midday" :
                              (hour >= 14 && hour < 18) ? "afternoon" : "evening";
 
     workouts.forEach(workout => {
-        if (workout.timeOfDay === currentTimeOfDay) {
+        const matchesTime = (filter === 'all' && workout.timeOfDay === currentTimeOfDay);
+        const matchesCategory = (workout.category === filter);
+        const matchesPeriod = (workout.timeOfDay.toLowerCase() === filter.toLowerCase());
+
+        if (matchesTime || matchesCategory || matchesPeriod) {
             const card = document.createElement("div");
             card.className = "card";
-            // This turns "Animal Movement" into "category-animal-movement"
             const categoryClass = "category-" + workout.category.toLowerCase().replace(" ", "-");
             card.classList.add(categoryClass);
-            
+
             card.innerHTML = `
                 <h3>${workout.name}</h3>
-                <p>Category: ${workout.category}</p>
+                <p>Category: ${workout.category} | ${workout.timeOfDay}</p>
             `;
             container.appendChild(card);
         }
     });
 }
-// Run this function as soon as the page loads
-updateGreeting();
+
+function filterWorkouts(category) {
+    // This highlights the button you just clicked
+    const buttons = document.querySelectorAll('.filter-btn');
+    buttons.forEach(btn => btn.classList.remove('active'));
+    
+    // This adds 'active' to the button you clicked
+    event.target.classList.add('active');
+
+    // This tells the display function to show only that category
+    displayWorkouts(category);
+}
+
+// 3. THE TRIGGER
+// This runs the function for the first time when the page opens
+displayWorkouts();

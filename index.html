@@ -8,6 +8,20 @@
 </head>
 <body>
     <h1 id="greeting">Muve</h1>
+    <div class="filter-wrapper">
+    <div id="filter-buttons" class="filter-container">
+        <button class="filter-btn active" onclick="filterWorkouts('all')">All</button>
+        <button class="filter-btn" onclick="filterWorkouts('Morning')">Morning</button>
+        <button class="filter-btn" onclick="filterWorkouts('Midday')">Midday</button>
+        <button class="filter-btn" onclick="filterWorkouts('Afternoon')">Afternoon</button>
+        <button class="filter-btn" onclick="filterWorkouts('Evening')">Evening</button>
+        <button class="filter-btn" onclick="filterWorkouts('Upper Body')">Upper Body</button>
+        <button class="filter-btn" onclick="filterWorkouts('Lower Body')">Lower Body</button>
+        <button class="filter-btn" onclick="filterWorkouts('Core')">Core</button>
+        <button class="filter-btn" onclick="filterWorkouts('Stretch')">Stretch</button>
+        <button class="filter-btn" onclick="filterWorkouts('Meditate')">Meditate</button>
+    </div>
+</div>
     <div id="workout-container" class="workout-grid">
     </div>
     <p>Coming soon to a workout near you.</p>
