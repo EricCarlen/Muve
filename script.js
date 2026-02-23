@@ -19,10 +19,10 @@ function displayWorkouts(filter = 'all') {
 
     // 1. Set the Greeting
     let message = "";
-    if (hour >= 3 && hour < 11) message = "Good Morning";
-    else if (hour >= 11 && hour < 14) message = "Good Midday";
-    else if (hour >= 14 && hour < 18) message = "Good Afternoon";
-    else message = "Good Evening";
+    if (hour >= 3 && hour < 11) message = "Morning (Cheeky wink...)";
+    else if (hour >= 11 && hour < 14) message = "Goodonya, I just love food";
+    else if (hour >= 14 && hour < 18) message = "What a blooming marvelous afternoon we find ourselves in";
+    else message = "Sometimes I sits and thinks, sometimes I just sits";
 
     if (greetingElement) {
         greetingElement.innerText = message;
@@ -32,9 +32,9 @@ function displayWorkouts(filter = 'all') {
     container.innerHTML = ""; 
 
     // 3. Determine time period for 'all' view
-    const currentTimeOfDay = (hour >= 3 && hour < 11) ? "Morning (Cheeky wink...)" : 
-                             (hour >= 11 && hour < 14) ? "Goodonya, I just love food" :
-                             (hour >= 14 && hour < 18) ? "What a blooming marvelous afternoon we find ourselves in" : "Sometimes I sits and thinks, sometimes I just sits";
+    const currentTimeOfDay = (hour >= 3 && hour < 11) ? "morning" : 
+                             (hour >= 11 && hour < 14) ? "midday" :
+                             (hour >= 14 && hour < 18) ? "afternoon" : "evening";
 
     // 4. Draw the Cards
     workouts.forEach(workout => {
