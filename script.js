@@ -23,6 +23,23 @@ const workouts = [
 // 2. THE BRAIN (The function that does the work)
 function displayWorkouts(filter = 'all') {
     const hour = new Date().getHours();
+    // 1. ADD THIS LINE: It finds the empty span in your new header
+    const greetingElement = document.getElementById("greeting");
+
+    // 2. LOGIC: Determine the message
+    let message = "";
+    if (hour >= 3 && hour < 11) message = "Morning (Cheeky wink...)";
+    else if (hour >= 11 && hour < 14) message = "Goodonya, I love food!";
+    else if (hour >= 14 && hour < 18) message = "What a blooming marvelous afternoon we find ourselves in.";
+    else message = "Sometimes and sits and thinks, sometimes I just sits";
+
+    // 3. PUSH MESSAGE: Put the text into the header
+    if (greetingElement) {
+        greetingElement.innerText = message;
+    }
+
+    const container = document.getElementById("workout-container");
+    container.innerHTML = "";
     const container = document.getElementById("workout-container");
     
     // This clears the cards before drawing new ones
@@ -40,13 +57,14 @@ function displayWorkouts(filter = 'all') {
 
         if (matchesTime || matchesCategory || matchesPeriod) {
             const card = document.createElement("div");
+            
+            // CLEANED: We only give it the "card" class now. 
+            // No more dynamic "category-xxx" classes.
             card.className = "card";
-            const categoryClass = "category-" + workout.category.toLowerCase().replace(" ", "-");
-            card.classList.add(categoryClass);
 
             card.innerHTML = `
                 <h3>${workout.name}</h3>
-                <p>Category: ${workout.category} | ${workout.timeOfDay}</p>
+                <p>${workout.category.toUpperCase()} | ${workout.timeOfDay.toUpperCase()}</p>
             `;
             container.appendChild(card);
         }
