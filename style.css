@@ -1,13 +1,20 @@
 body {
-    background-color: #000000;  /* Pure black */
-    color: #ffffff;             /* Pure white */
-    text-align: center;           /* Centers the text */
-    padding-top: 100px;           /* Pushes text down from the top */
+    background-color: white;
+    color: black;
+    margin: 0;
+    padding: 20px;
+    font-family: -apple-system, system-ui, sans-serif;
 }
 
 h1 {
-    font-size: 80px;              /* Makes 'Muve' big and bold */
-    letter-spacing 5px;           /* Adds space between letter for a 'brand' look*/
+    font-size: 0.75rem;     /* Very small font */
+    text-align: left;       /* Top left */
+    font-weight: 700;
+    letter-spacing: 0.1rem;
+    text-transform: uppercase;
+    margin-bottom: 30px;    /* Space before the buttons */
+    border-bottom: 1px solid #eee; /* Light divider line */
+    padding-bottom: 10px;
 }
 button{
     background-color: #ffffff;  /* White button */
@@ -42,16 +49,16 @@ button:hover {
 
 /* The Card: The white box for each workout */
 .card {
-    background: #f4f4f4;
-    padding: 20px;
-    border-radius: 15px; /* Rounded corners make it look like an app */
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    border-left: 8px solid #333; /* A little accent color stripe */
+    background: white;
+    border: 1px solid #000; /* Black border for a 'brutalist' look */
+    border-left: 8px solid #000; 
+    border-radius: 0px;     /* Square edges look more modern with this style */
+    margin-bottom: 15px;
 }
 
 .card h3 {
-    margin: 0 0 10px 0;
-    color: #333;
+    font-size: 1.1rem;
+    text-transform: uppercase;
 }
 
 .card p {
