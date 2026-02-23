@@ -32,9 +32,9 @@ function displayWorkouts(filter = 'all') {
     container.innerHTML = ""; 
 
     // 3. Determine time period for 'all' view
-    const currentTimeOfDay = (hour >= 3 && hour < 11) ? "morning" : 
-                             (hour >= 11 && hour < 14) ? "midday" :
-                             (hour >= 14 && hour < 18) ? "afternoon" : "evening";
+    const currentTimeOfDay = (hour >= 3 && hour < 11) ? "Morning (Cheeky wink...)" : 
+                             (hour >= 11 && hour < 14) ? "Goodonya, I just love food" :
+                             (hour >= 14 && hour < 18) ? "What a blooming marvelous afternoon we find ourselves in" : "Sometimes I sits and thinks, sometimes I just sits";
 
     // 4. Draw the Cards
     workouts.forEach(workout => {
