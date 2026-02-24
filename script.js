@@ -52,15 +52,37 @@ function displayWorkouts(filter = 'all') {
 }
 
 function filterWorkouts(category) {
-    const buttons = document.querySelectorAll('.filter-btn');
-    buttons.forEach(btn => btn.classList.remove('active'));
-    
-    // Using currentTarget ensures we grab the button even if you click the text inside it
-    if (event && event.currentTarget) {
-        event.currentTarget.classList.add('active');
-    }
+    // 1. Find the specific workout in your array
+    const selectedWorkout = workouts.find(w => 
+        w.category.toLowerCase() === category.toLowerCase() || 
+        w.timeOfDay.toLowerCase() === category.toLowerCase()
+    );
 
-    displayWorkouts(category);
+    if (selectedWorkout) {
+        const overlay = document.getElementById("workout-overlay");
+        const content = document.getElementById("overlay-content");
+
+        // 2. Build the full-screen content
+        content.innerHTML = `
+            <p style="text-transform: uppercase; font-size: 0.7rem; color: #666; letter-spacing: 2px;">
+                ${selectedWorkout.category}
+            </p>
+            <h1 style="font-size: 2.5rem; margin: 15px 0; font-weight: 800;">
+                ${selectedWorkout.name}
+            </h1
+            <div style="border-top: 2px solid black; width: 40px; margin: 20px auto;"></div>
+            <p style="font-size: 1.1rem; font-style: italic;">Ready to muve?</p>
+        `;
+
+        // 3. Show the overlay
+        overlay.classList.add("active");
+    }
+}
+
+// 4. Add this brand new function to handle the BACK button
+function closeWorkout() {
+    const overlay = document.getElementById("workout-overlay");
+    overlay.classList.remove("active");
 }
 
 // Start the app - will show all workouts initially
