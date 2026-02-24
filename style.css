@@ -85,32 +85,36 @@ button:hover {
     padding: 20px;
     margin-bottom: 15px;
 }
-/* Specific colors based on Category */
-/* We will use JavaScript to add these classes in the next step! */
-.filter-wrapper {
-    overflow-x: auto; /* Enables horizontal scroll */
-    white-space: nowrap;
-    padding: 10px 20px;
-    -webkit-overflow-scrolling: touch; /* Makes scrolling smooth on iPhone */
+/* The 3x2 Grid for Categories */
+.category-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two equal columns */
+    gap: 10px;                      /* Space between buttons */
+    margin-bottom: 10px;            /* Space before the time buttons */
 }
 
-.filter-container {
-    display: inline-flex;
+/* The 1x2 Grid for Time */
+.time-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 10px;
+    margin-bottom: 30px;            /* Space before the workout cards start */
 }
 
+/* Make the buttons look uniform */
 .filter-btn {
-    padding: 8px 16px;
-    border-radius: 20px;
-    border: 1px solid #ddd;
+    width: 100%;
+    padding: 15px 5px;             /* Taller touch targets like an app */
     background: white;
+    border: 1px solid black;
+    color: black;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
     cursor: pointer;
-    font-size: 0.9rem;
-    transition: all 0.3s ease;
 }
 
 .filter-btn.active {
-    background: black;  /* Solid black when clicked */
-    color: white;       /* White text so you can read it */
-    border-color: black;
+    background: black;
+    color: white;
 }
