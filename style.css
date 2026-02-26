@@ -137,20 +137,30 @@ button:hover {
     display: flex;
 }
 
+/* Sleek Back Arrow */
 .close-btn {
     align-self: flex-start;
     background: none;
-    border: 1px solid black;
-    padding: 8px 15px;
-    font-weight: bold;
+    border: none;      /* Removed the box border */
+    font-size: 2rem;   /* Bigger arrow */
+    color: black;
     cursor: pointer;
-    margin-bottom: 50px;
+    margin-bottom: 20px;
+    padding: 0;
 }
 
+/* Ensure the overlay content is a centering machine */
 #overlay-content {
     text-align: center;
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: center; /* Vertical center */
+    align-items: center;     /* Horizontal center */
+}
+
+#overlay-content h1 {
+    font-size: 2.5rem;
+    text-transform: uppercase;
+    margin: 10px 0;
 }

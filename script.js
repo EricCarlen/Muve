@@ -52,31 +52,34 @@ function displayWorkouts(filter = 'all') {
 }
 
 function filterWorkouts(category) {
-    // 1. Find the specific workout in your array
-    const selectedWorkout = workouts.find(w => 
-        w.category.toLowerCase() === category.toLowerCase() || 
-        w.timeOfDay.toLowerCase() === category.toLowerCase()
-    );
-
-    if (selectedWorkout) {
-        const overlay = document.getElementById("workout-overlay");
-        const content = document.getElementById("overlay-content");
-
-        // 2. Build the full-screen content
+    const overlay = document.getElementById("workout-overlay");
+    const content = document.getElementById("overlay-content");
+    
+    // 1. Check if we clicked 'morning' or 'evening' (for a list)
+    if (category.toLowerCase() === 'morning' || category.toLowerCase() === 'evening') {
+        const list = workouts.filter(w => w.timeOfDay.toLowerCase() === category.toLowerCase());
+        
         content.innerHTML = `
-            <p style="text-transform: uppercase; font-size: 0.7rem; color: #666; letter-spacing: 2px;">
-                ${selectedWorkout.category}
-            </p>
-            <h1 style="font-size: 2.5rem; margin: 15px 0; font-weight: 800;">
-                ${selectedWorkout.name}
-            </h1
-            <div style="border-top: 2px solid black; width: 40px; margin: 20px auto;"></div>
-            <p style="font-size: 1.1rem; font-style: italic;">Ready to muve?</p>
+            <p style="text-transform: uppercase; letter-spacing: 2px;">${category} Session</p>
+            <div style="text-align: left; margin-top: 20px;">
+                ${list.map(w => `<p style="border-bottom: 1px solid #eee; padding: 10px 0;">• ${w.name}</p>`).join('')}
+            </div>
         `;
-
-        // 3. Show the overlay
-        overlay.classList.add("active");
+    } 
+    // 2. Otherwise, show the single category workout
+    else {
+        const selectedWorkout = workouts.find(w => w.category.toLowerCase() === category.toLowerCase());
+        if (selectedWorkout) {
+            content.innerHTML = `
+                <p style="text-transform: uppercase; font-size: 0.7rem; color: #666;">${selectedWorkout.category}</p>
+                <h1>${selectedWorkout.name}</h1>
+                <div style="border-top: 2px solid black; width: 40px; margin: 20px auto;"></div>
+                <p>Ready to muve?</p>
+            `;
+        }
     }
+
+    overlay.classList.add("active");
 }
 
 // 4. Add this brand new function to handle the BACK button
