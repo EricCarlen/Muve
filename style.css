@@ -124,15 +124,16 @@ button:hover {
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%;
+    /* Use dvh (Dynamic Viewport Height) for mobile browser bars */
+    height: 100dvh; 
     background: white;
-    z-index: 1000;      /* Sits on top of everything */
-    display: none;      /* Hidden by default */
+    z-index: 1000;
+    display: none;
     flex-direction: column;
-    padding: 40px 20px;
+    padding: 20px;
+    box-sizing: border-box; /* Ensures padding doesn't push width over 100% */
 }
 
-/* When the overlay is active, we show it as a flexbox */
 .overlay.active {
     display: flex;
 }
@@ -149,18 +150,22 @@ button:hover {
     padding: 0;
 }
 
-/* Ensure the overlay content is a centering machine */
+/* The Container inside the Overlay */
 #overlay-content {
-    text-align: center;
     flex-grow: 1;
     display: flex;
     flex-direction: column;
     justify-content: center; /* Vertical center */
     align-items: center;     /* Horizontal center */
+    text-align: center;
+    width: 100%;
 }
 
+/* Ensure the title doesn't hug the edges on small screens */
 #overlay-content h1 {
-    font-size: 2.5rem;
+    font-size: 2rem;
+    width: 90%;
+    margin: 10px auto;
     text-transform: uppercase;
-    margin: 10px 0;
+    line-height: 1.2;
 }
