@@ -52,38 +52,14 @@ button:hover {
     padding: 0 20px;   /* Adds a little space so text doesn't hit the screen edges */
   }
 }
-/* The Container: Centers everything and adds spacing */
-.workout-grid {
-    display: flex;
-    flex-direction: column; /* Stacks cards vertically for mobile */
-    gap: 20px;
-    padding: 20px;
-    max-width: 500px;
-    margin: 0 auto; /* Centers the whole list */
+/* 1. Hide the container on the main screen */
+#workout-container {
+    display: none;
 }
 
-/* The Card: The white box for each workout */
+/* 2. Remove all card styling */
 .card {
-    background: white;
-    border: 1px solid #000; /* Black border for a 'brutalist' look */
-    border-left: 8px solid #000; 
-    border-radius: 0px;     /* Square edges look more modern with this style */
-    margin-bottom: 15px;
-}
-
-.card h3 {
-    font-size: 1.1rem;
-    text-transform: uppercase;
-}
-
-.card {
-    background: white;
-    color: black;
-    border: 1px solid black;       /* Thin black outline */
-    border-left: 10px solid black; /* Solid black accent stripe */
-    border-radius: 0;              /* Sharp, modern corners */
-    padding: 20px;
-    margin-bottom: 15px;
+    display: none; /* We aren't using these at all anymore */
 }
 /* The 3x2 Grid for Categories */
 .category-grid {
@@ -150,22 +126,14 @@ button:hover {
     padding: 0;
 }
 
-/* The Container inside the Overlay */
-#overlay-content {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center; /* Vertical center */
-    align-items: center;     /* Horizontal center */
-    text-align: center;
-    width: 100%;
+/* 3. Clean up the Overlay List appearance */
+#overlay-content p {
+    margin: 12px 0;
+    font-weight: 400;
+    letter-spacing: 0.5px;
 }
 
-/* Ensure the title doesn't hug the edges on small screens */
-#overlay-content h1 {
-    font-size: 2rem;
-    width: 90%;
-    margin: 10px auto;
-    text-transform: uppercase;
-    line-height: 1.2;
+#overlay-content strong {
+    font-weight: 700;
+    margin-right: 8px;
 }
