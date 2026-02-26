@@ -100,14 +100,15 @@ button:hover {
     top: 0;
     left: 0;
     width: 100%;
-    /* Use dvh (Dynamic Viewport Height) for mobile browser bars */
     height: 100dvh; 
     background: white;
     z-index: 1000;
     display: none;
     flex-direction: column;
     padding: 20px;
-    box-sizing: border-box; /* Ensures padding doesn't push width over 100% */
+    box-sizing: border-box;
+    /* This allows the whole screen to scroll if the list is long */
+    overflow-y: auto; 
 }
 
 .overlay.active {
@@ -118,12 +119,29 @@ button:hover {
 .close-btn {
     align-self: flex-start;
     background: none;
-    border: none;      /* Removed the box border */
-    font-size: 2rem;   /* Bigger arrow */
+    border: none;
+    font-size: 2rem;
     color: black;
     cursor: pointer;
-    margin-bottom: 20px;
+    /* Use 'fixed' or large margin to keep it at the top */
+    margin-bottom: 20px; 
     padding: 0;
+    /* Ensures the button doesn't shrink when scrolling */
+    flex-shrink: 0; 
+}
+
+/* The Magic Centering Container */
+#overlay-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Vertical center */
+    align-items: center;     /* Horizontal center */
+    text-align: center;
+    width: 100%;
+    /* margin: auto 0 is the secret for centering + scrolling */
+    margin: auto 0;         
+    min-height: min-content;
+    padding-bottom: 60px;    /* Adds space so the last item isn't cut off by the screen bottom */
 }
 
 /* 3. Clean up the Overlay List appearance */
@@ -136,4 +154,11 @@ button:hover {
 #overlay-content strong {
     font-weight: 700;
     margin-right: 8px;
+}
+
+/* Add this to style the mobility list specifically */
+.mobility-list {
+    text-align: left;
+    max-width: 90%;
+    margin: 20px auto;
 }

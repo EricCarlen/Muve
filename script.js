@@ -23,14 +23,14 @@ function setGreeting() {
 function filterWorkouts(category) {
     const overlay = document.getElementById("workout-overlay");
     const content = document.getElementById("overlay-content");
-    
+    //Morning Section
     if (category.toLowerCase() === 'morning') {
         content.innerHTML = `
             <p style="text-transform: uppercase; letter-spacing: 2px; font-size: 0.7rem; color: #666;">Daily Ritual</p>
             <h1>Morning Mobility</h1>
             <div style="border-top: 1px solid black; width: 30px; margin: 15px auto;"></div>
             
-            <div style="text-align: left; font-size: 0.95rem; max-width: 90%; margin: 0 auto; overflow-y: auto; max-height: 70vh;">
+            <div class="mobility-list">
                 <p><strong>1.</strong> Wrist Circles & Extensions</p>
                 <p><strong>2.</strong> Neck Circles</p>
                 <p><strong>3.</strong> Toe Flex & Splay</p>
@@ -44,7 +44,6 @@ function filterWorkouts(category) {
                 <p><strong>11.</strong> Dynamic Frog Pose to Thoracic Bridge</p>
                 <p><strong>12.</strong> Standing Side Bend to Back Bend</p>
             </div>
-            <button class="filter-btn" style="margin-top: 25px; width: auto; padding: 10px 30px;">START TIMER</button>
         `;
     } 
     else {
@@ -55,8 +54,7 @@ function filterWorkouts(category) {
                 <h1>${workout.name}</h1>
                 <div style="border-top: 1px solid black; width: 30px; margin: 15px auto;"></div>
                 <p style="font-style: italic;">Ready to muve?</p>
-                <button class="filter-btn" style="margin-top: 25px; width: auto; padding: 10px 30px;">START WORKOUT</button>
-            `;
+                `;
         }
     }
     overlay.classList.add("active");
