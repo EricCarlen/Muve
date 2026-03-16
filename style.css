@@ -62,38 +62,87 @@ button:hover {
     display: none; /* We aren't using these at all anymore */
 }
 /* The 3x2 Grid for Categories */
+/* Ensure the grid keeps things tight */
 .category-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr; /* Two equal columns */
-    gap: 10px;                      /* Space between buttons */
-    margin-bottom: 10px;            /* Space before the time buttons */
+    grid-template-columns: repeat(2, 1fr); /* 3 columns for square feel */
+    gap: 15px;
+    margin-bottom: 20px;
+    max-width: 500px; margin: 0 auto; 
+}
+/* Make Morning (the first button) span both columns */
+.category-grid .filter-btn:first-child {
+    grid-column: span 2;
+    aspect-ratio: 8.09 / 1; /* Double the Golden Ratio width (1.618 * 2) */
+    margin-bottom: 5px;    /* A little extra space before the main grid */
 }
 
-/* The 1x2 Grid for Time */
-.time-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 30px;            /* Space before the workout cards start */
+/* Make Evening (the last button) span both columns */
+.category-grid .filter-btn:last-child {
+    grid-column: span 2;
+    aspect-ratio: 8.09 / 1; 
+    margin-top: 5px;       /* A little extra space after the main grid */
 }
 
-/* Make the buttons look uniform */
+/* Adjust the inner content for the wider "Thin" buttons */
+.category-grid .filter-btn:first-child span,
+.category-grid .filter-btn:last-child span {
+    flex: 3;                /* More room for text in the wide buttons */
+    text-align: center;     /* Looks better centered when the button is this wide */
+    padding-right: 15%;     /* Offsets the icon on the left to keep text centered */
+}
+
+
 .filter-btn {
-    width: 100%;
-    padding: 15px 5px;             /* Taller touch targets like an app */
+    all: unset; /* This resets the default button "bubble" look */
+    aspect-ratio: 3.236 / 1; 
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 10px;
     background: white;
     border: 1px solid black;
-    color: black;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
+    border-radius: 12px; 
     cursor: pointer;
+    transition: 0.2s;
+    box-sizing: border-box; /* Crucial for square buttons */
 }
 
-.filter-btn.active {
-    background: black;
-    color: white;
+/* Icon occupies the left 1/3 */
+.filter-btn svg {
+    flex: 1;                 /* Takes up 1 part of the space */
+    width: 32px;             /* Slightly larger icons look better in rectangles */
+    height: 32px;
+    display: flex;
+    justify-content: center; /* Centers icon within its 1/3 area */
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    margin-bottom: 0;        /* Removed the bottom margin from the old vertical look */
 }
+
+/* Text occupies the right 2/3 */
+.filter-btn span {
+    flex: 2;                 /* Takes up 2 parts of the space */
+    font-size: 0.75rem;      /* Bumped up slightly for the wider button */
+    text-align: left;        /* Aligned to the left of its 2/3 area */
+    padding-left: 5px;       /* Small gap between icon area and text */
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+/* This makes the button react when you press it */
+.filter-btn:active, .filter-btn.active {
+    background: #000; /* Black background */
+    color: #fff;      /* White text */
+}
+
+/* This ensures the icon also changes color when the button is active */
+.filter-btn:active svg, .filter-btn.active svg {
+    stroke: #fff;
+}
+
 /* The Overlay Background */
 .overlay {
     position: fixed;
@@ -144,11 +193,12 @@ button:hover {
     padding-bottom: 60px;    /* Adds space so the last item isn't cut off by the screen bottom */
 }
 
-/* 3. Clean up the Overlay List appearance */
-#overlay-content p {
-    margin: 12px 0;
-    font-weight: 400;
-    letter-spacing: 0.5px;
+#overlay-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;    /* This centers the blocks horizontally */
+    text-align: center;
+    width: 100%;
 }
 
 #overlay-content strong {
@@ -156,9 +206,91 @@ button:hover {
     margin-right: 8px;
 }
 
-/* Add this to style the mobility list specifically */
+/* --- Workout Overlay Content Styling --- */
+
+/* 1. The "2-3 SETS" Header */
+.set-counter {
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-align: center;
+    width: 100%;
+    text-transform: uppercase;
+    margin-bottom: 15px; 
+    color: #888;
+    display: block; /* Ensures it stays on its own line */
+}
+
+/* The Gap between A, B, and C groups */
+.workout-block {
+    display: flex;
+    flex-direction: column;
+    text-align: left;       /* Keeps A1 and A2 aligned with each other */
+    width: fit-content;     /* Shrinks the box to the text size so it can be centered */
+    min-width: 200px;       /* Prevents it from getting too narrow */
+    margin-bottom: 25px;    /* Your new tighter spacing */
+}
+
 .mobility-list {
-    text-align: left;
-    max-width: 90%;
-    margin: 20px auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;    /* Centering the invisible boxes holding A, B, C */
+    width: 100%;
+}
+
+/* Taps into the paragraphs inside your blocks to bring A1 & A2 together */
+.workout-block p {
+    margin: 2px 0;    /* Very small vertical gap */
+    padding: 0;       /* Ensures no hidden internal spacing */
+}
+
+/* Optional: Makes the A1, B1 part stand out slightly */
+.workout-block p strong {
+    color: #333;      /* Makes the label a bit bolder/darker */
+    margin-right: 5px; 
+}
+/* Container to help center the link */
+.workout-link-container {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee; /* Light line to separate the list from the link */
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+/* The 'Next' button styling */
+.link-btn {
+    background: none;
+    border: 1px solid #333;
+    color: #333;
+    padding: 10px 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.link-btn span {
+    margin-left: 8px;
+}
+
+.link-btn:hover {
+    background: #333;
+    color: #fff;
+}
+
+/* Styling and centering the section headers like WARM UP */
+.block-title {
+    display: block;
+    text-align: center;
+    width: 100%;
+    font-weight: 800;
+    letter-spacing: 1px;
+    margin-bottom: 10px; /* Space between title and first exercise */
+    color: #333;
+    text-transform: uppercase;
+    font-size: 0.9rem;
 }
