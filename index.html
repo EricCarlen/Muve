@@ -55,10 +55,25 @@
 </div>
 
     <div id="workout-overlay" class="overlay">
+        
+    <div class="workout-header">
         <button class="close-btn" onclick="closeWorkout()">&#8592;</button>
-
-        <div id="overlay-content"></div>
+        <h1 id="overlay-title">CORE ROTATION</h1>
+        <div style="width: 24px;"></div>
     </div>
+
+    <div class="workout-controls">
+        <button id="play-pause-btn" class="control-btn" onclick="togglePlayPause()">&#9658;</button>
+        <button id="skip-btn" class="control-btn" onclick="skipStep()">&#10141;</button>
+    </div>
+    <div id="overlay-content"></div>
+
+    <div class="timer-container">
+        <div id="progress" class="timer-bar"></div>
+        <span id="timer-countdown">00:00</span>
+    </div>
+
+</div>
 
     <script src="script.js"></script>
 </body>

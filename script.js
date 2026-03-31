@@ -1,3 +1,9 @@
+let workoutTimer;
+let isPaused = true; // Start paused
+let currentStep = 0;
+let elapsed = 0;
+let steps = []; // Keep this global so skipStep can see it
+
 // 1. The Greeting Logic
 function setGreeting() {
     const hour = new Date().getHours();
@@ -15,9 +21,12 @@ function setGreeting() {
 function filterWorkouts(category) {
     // 1. Immediately snap to the top of the page/overlay
     window.scrollTo(0, 0);
+    clearInterval(workoutTimer); // Stop any running timers from previous clicks
 
     const overlay = document.getElementById("workout-overlay");
     const content = document.getElementById("overlay-content");
+    const overlayTitle = document.getElementById("overlay-title");
+
     let title = "";
     let exercises = "";
 
@@ -155,31 +164,12 @@ function filterWorkouts(category) {
             break;
 
         case 'core rotation':
-            title = "Core Rotation 15 min";
-            exercises = `
-            <div class="set-counter">Rotation & Anti-rotation - Post Upper Body</div>
-
-            <div class="workout-block">
-            <span class="block-title">WARM UP</span>
-            <p><strong>1.</strong> Torso Twists 1 min</p>
-            <p><strong>2.</strong> Cat - Cow 1 min</p>
-            <p><strong>3.</strong> Standing Side Bends 1 min</p>
-            </div>
-        
-            <div class="workout-block">
-            <span class="block-title">MAIN WORK 10 min</span>
-            <p><strong>1.</strong> Twisting Planks → Side Plank 2½ min</p>
-            <p><strong>2.</strong> Russian Twists 2½ min</p>
-            <p><strong>3.</strong> Starfish Crunch 2½ min</p>
-            <p><strong>4.</strong> Side Plank with Hip Dips 2½ min</p>
-            </div>
-
-            <div class="workout-block">
-            <span class="block-title">COOL DOWN</span>
-            <p><strong>1.</strong> Supine Twists 1 min/side</p>
-            </div>
-            `;
-            break;
+    // 1. Launch the timer engine (make sure this function name matches your engine)
+        startCoreRotation(); 
+    // 2. Manually show the overlay since we are bypassing the default text display
+        document.getElementById("workout-overlay").style.display = "flex";
+    // 3. 'return' is vital—it stops the function from trying to display empty title/exercises
+        return;
 
         case 'core control':
             title = "Core Control 15 min";
@@ -276,18 +266,158 @@ function filterWorkouts(category) {
             title = "MUVE Workout";
             exercises = "<p>Select a category to begin.</p>";
     }
-    content.innerHTML = `
-        <h1>${title}</h1>
-        <div style="border-top: 1px solid black; width: 30px; margin: 15px auto;"></div>
-        <div class="mobility-list">${exercises}</div>
-    `;
-
-    overlay.classList.add("active");
+    // This only runs if the category wasn't 'core rotation'
+    if (title !== "") overlayTitle.innerText = title;
+    if (exercises !== "") content.innerHTML = exercises;
+    
+    overlay.style.display = "flex";
 }
 
 function closeWorkout() {
-    document.getElementById("workout-overlay").classList.remove("active");
+    // 1. Hide the overlay
+    const overlay = document.getElementById("workout-overlay");
+    overlay.style.display = "none";
+
+    // 2. Stop the timer immediately so it doesn't keep running in the background
+    clearInterval(workoutTimer);
+
+    // 3. Reset the content so it's clean for the next time you open it
+    document.getElementById("overlay-content").innerHTML = "";
 }
 
 // Only run the greeting on load
 window.addEventListener('DOMContentLoaded', setGreeting);
+
+function startCoreRotation() {
+    // RESET GLOBAL STATE
+    clearInterval(workoutTimer);
+    currentStep = 0;
+    elapsed = 0;
+    isPaused = true;
+    
+    // Reset the Play button symbol when the workout starts
+    const playBtn = document.getElementById("play-pause-btn");
+    if (playBtn) playBtn.innerHTML = "&#9658;";
+
+    const overlayTitle = document.getElementById("overlay-title");
+    overlayTitle.innerText = "Core Rotation (15 Min)";
+    
+    // Update the global 'steps' array
+    steps = [
+        { cat: "WARM UP", name: "Torso Twists", duration: 60 },
+        { cat: "WARM UP", name: "Rest", duration: 15 },
+        { cat: "WARM UP", name: "Cat-Cow", duration: 60 },
+        { cat: "WARM UP", name: "Rest", duration: 15 },
+        { cat: "WARM UP", name: "Standing Side Bends", duration: 60 },
+        { cat: "WARM UP", name: "Rest", duration: 15 },
+        { cat: "MAIN WORK", name: "Twisting Planks → Side Plank", duration: 150 },
+        { cat: "MAIN WORK", name: "Rest", duration: 15 },
+        { cat: "MAIN WORK", name: "Russian Twists", duration: 150 },
+        { cat: "MAIN WORK", name: "Rest", duration: 15 },
+        { cat: "MAIN WORK", name: "Starfish Crunch", duration: 150 },
+        { cat: "MAIN WORK", name: "Rest", duration: 15 },
+        { cat: "MAIN WORK", name: "Side Plank with Hip Dips", duration: 150 },
+        { cat: "MAIN WORK", name: "Rest", duration: 15 },
+        { cat: "COOL DOWN", name: "Supine Twists", duration: 120 }
+    ];
+
+    updateUI(); // Draw the list for the first time
+}
+
+// 2. THE PAINTER (Draws the list)
+function updateUI() { // ...and finds the definition HERE
+    const content = document.getElementById("overlay-content");
+    let html = `<div class="workout-list">`;
+    let lastCategory = "";
+
+    steps.forEach((step, index) => {
+        if (step.name === "Rest" && index < currentStep) return;
+
+        if (step.cat !== lastCategory) {
+            html += `<h3 class="workout-section-title">${step.cat}</h3>`;
+            lastCategory = step.cat;
+        }
+
+        let status = index === currentStep ? 'active' : (index < currentStep ? 'completed' : '');
+        if (step.name === "Rest") status += " rest";
+        
+        let mins = Math.floor(step.duration / 60);
+        let secs = step.duration % 60;
+        let timeDisplay = mins > 0 ? `${mins}m ${secs < 10 ? '0'+secs : secs}s` : `${secs}s`;
+
+        html += `<div class="exercise-item ${status}">
+                    <span class="step-name">${step.name}</span>
+                    <span class="step-time">${timeDisplay}</span>
+                 </div>`;
+    });
+    
+    html += `</div>`; // Close the backtick, THEN add the semicolon
+    content.innerHTML = html;
+}
+
+function togglePlayPause() {
+    const btn = document.getElementById("play-pause-btn");
+    if (isPaused) {
+        isPaused = false;
+        // Use innerHTML so the browser "reads" the symbol code
+        btn.innerHTML = "&#10074;&#10074;"; // Pause symbol ||
+        startTicker();
+    } else {
+        isPaused = true;
+        btn.innerHTML = "&#9658;"; // Play symbol >
+        clearInterval(workoutTimer);
+    }
+}
+
+function startTicker() {
+    clearInterval(workoutTimer);
+    workoutTimer = setInterval(() => {
+        elapsed++;
+        
+        // 1. Overall Progress Bar
+        const totalTime = steps.reduce((acc, s) => acc + s.duration, 0);
+        const progressBar = document.getElementById("progress");
+        if (progressBar) {
+            progressBar.style.width = (elapsed / totalTime) * 100 + "%";
+        }
+
+        // 2. Step Countdown Logic
+        const countdownEl = document.getElementById("timer-countdown");
+        if (countdownEl) {
+            // Calculate total time of all steps up to the current one
+            let timeAtEndOfCurrentStep = steps.slice(0, currentStep + 1).reduce((acc, s) => acc + s.duration, 0);
+            let secondsLeftInStep = timeAtEndOfCurrentStep - elapsed;
+
+            let m = Math.floor(secondsLeftInStep / 60);
+            let s = secondsLeftInStep % 60;
+            countdownEl.innerText = `${m}:${s < 10 ? '0' + s : s}`;
+        }
+
+        // 3. Move to next step
+        let timePassedForSteps = steps.slice(0, currentStep + 1).reduce((acc, s) => acc + s.duration, 0);
+        if (elapsed >= timePassedForSteps) {
+            goToNextStep();
+        }
+    }, 1000);
+}
+
+function skipStep() {
+    // Jump 'elapsed' to the end of the current step
+    let timeToEndOfCurrent = steps.slice(0, currentStep + 1).reduce((acc, s) => acc + s.duration, 0);
+    elapsed = timeToEndOfCurrent;
+    goToNextStep();
+}
+
+function goToNextStep() {
+    currentStep++;
+    if (currentStep >= steps.length) {
+        clearInterval(workoutTimer);
+        document.getElementById("overlay-content").innerHTML = `
+            <div style="text-align:center; padding: 50px;">
+                <h2>Workout Complete!</h2>
+                <button class="filter-btn" onclick="closeWorkout()">Finish</button>
+            </div>`;
+    } else {
+        updateUI();
+    }
+}
