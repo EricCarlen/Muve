@@ -39,7 +39,7 @@ function filterWorkouts(category) {
         
             <div class="workout-block">
             <span class="block-title">FLOW 15 min</span>
-            <p><strong>1.</strong> Wrist Circles & Extensions</p>
+            <p><strong>1.</strong> Wrist Circles <span class="tip-icon" onclick="alert('Slow circles; feel the stretch in the forearm.')">ⓘ</span></p>
             <p><strong>2.</strong> Neck Circles</p>
             <p><strong>3.</strong> Toe Flex & Splay</p>
             <p><strong>4.</strong> Standing Hip Circles to Forward Fold</p>
@@ -52,23 +52,19 @@ function filterWorkouts(category) {
             <p><strong>11.</strong> Standing Side Bend to Back Bend</p>
             </div>
 
-            <div class="workout-block">
-            <span class="block-title">BALANCE 4 min</span>
-            <p><strong>1.</strong> One Leg arm circles 1 min/leg</p>
-            <p><strong>2.</strong> One leg toes clock reaches 1 min/leg</p>
-            </div>
-
-            <div class="workout-block">
-            <span class="block-title">SWEATY 6 min</span>
-            <p><strong>1.</strong> Core - Toe Touches 30s | Bicycle 30s</p>
-            <p><strong>2.</strong> Push ups 1 min</p>
-            <p><strong>3.</strong> Horse Stance with side bends 1 min</p>
-            <p><strong>4.</strong> Plank 1 min</p>
-            <p><strong>5.</strong> Pistol Squat 30s/side</p>
-            <p><strong>6.</strong> Crawl 1 min</p>
+            <div class="workout-link-container">
+            <p style="text-align:center; font-size: 0.85rem; color: #888; margin: 0;">
+            Ready for the timed section?
+            </p>
+            <button class="link-btn" onclick="startMorningTimed()">
+            Start: Balance & Sweat <span>&#9658;</span>
+            </button>
             </div>
             `;
-            break;
+            // Ensure timer elements are hidden for the Flow part
+            document.querySelector(".timer-container").style.display = "none";
+             document.querySelector(".workout-controls").style.display = "none";
+        break;
 
         case 'upper body':
             title = "Upper Body";
@@ -164,43 +160,29 @@ function filterWorkouts(category) {
             break;
 
         case 'core rotation':
-    // 1. Launch the timer engine (make sure this function name matches your engine)
+        // 1. Launch the timer engine (make sure this function name matches your engine)
         startCoreRotation(); 
-    // 2. Manually show the overlay since we are bypassing the default text display
+        // 2. Manually show the overlay since we are bypassing the default text display
         document.getElementById("workout-overlay").style.display = "flex";
-    // 3. 'return' is vital—it stops the function from trying to display empty title/exercises
+        // 3. 'return' is vital—it stops the function from trying to display empty title/exercises
+        document.querySelector(".timer-container").style.display = "flex";
+        document.querySelector(".workout-controls").style.display = "flex";
         return;
 
         case 'core control':
-            title = "Core Control 15 min";
-            exercises = `
-            <div class="set-counter">Integration & Dynamic Control - Post Lower Body</div>
-        
-            <div class="workout-block">
-            <span class="block-title">WARM UP</span>
-            <p><strong>1.</strong> Dynamic Plank → Downward Dog 2 min</p>
-            <p><strong>2.</strong> Cat - Cow 1 min</p>
-            </div>
+        // 1. Launch the timer engine (make sure this function name matches your engine)
+        startCoreControl(); 
+        // 2. Manually show the overlay since we are bypassing the default text display
+        document.getElementById("workout-overlay").style.display = "flex";
+        // 3. 'return' is vital—it stops the function from trying to display empty title/exercises
+        document.querySelector(".timer-container").style.display = "flex";
+        document.querySelector(".workout-controls").style.display = "flex";
+        return;
 
-            <div class="workout-block">
-            <span class="block-title">MAIN WORK 10 min</span>
-            <p><strong>1.</strong> Bicycle Crunches 2 min</p>
-            <p><strong>2.</strong> Twisting Bear Crawl 2 min</p>
-            <p><strong>3.</strong> Twisting V-Ups 2 min</p>
-            <p><strong>4.</strong> Plank Shoulder Taps + Knee Twists 2 min</p>
-            <p><strong>5.</strong> Twisting Hollow Body Hold 40s on/20s off</p>
-            </div>
-
-            <div class="workout-block">
-            <span class="block-title">COOL DOWN</span>
-            <p><strong>1.</strong> Child's Pose with side stretch 1 min/side</p>
-            </div>
-            `;
-            break;
 
         case 'mobility side':
-    title = "Mobility";
-    exercises = `
+        title = "Mobility";
+        exercises = `
         <div class="set-counter">Quality Full ROM | 2 - 3 SETS</div>
 
         <div class="workout-block">
@@ -217,8 +199,8 @@ function filterWorkouts(category) {
             <p><strong>C1.</strong> Shoulder Rolls x 10</p>
             <p><strong>C2.</strong> ATG Split Squat x 10 ea</p>
         </div>
-    `;
-    break;
+        `;
+        break;
 
         case 'strength side':
             title = "Strength";
@@ -263,6 +245,12 @@ function filterWorkouts(category) {
             break;
 
         default:
+            // HIDE the timer elements for standard list workouts
+            const timerCont = document.querySelector(".timer-container");
+            const controls = document.querySelector(".workout-controls");
+            if (timerCont) timerCont.style.display = "none";
+            if (controls) controls.style.display = "none";
+
             title = "MUVE Workout";
             exercises = "<p>Select a category to begin.</p>";
     }
@@ -281,7 +269,10 @@ function closeWorkout() {
     // 2. Stop the timer immediately so it doesn't keep running in the background
     clearInterval(workoutTimer);
 
-    // 3. Reset the content so it's clean for the next time you open it
+    // HIDE the timer bar so it's gone when you return to the main menu
+    document.querySelector(".timer-container").style.display = "none";
+    document.querySelector(".workout-controls").style.display = "none";
+
     document.getElementById("overlay-content").innerHTML = "";
 }
 
@@ -310,13 +301,15 @@ function startCoreRotation() {
         { cat: "WARM UP", name: "Rest", duration: 15 },
         { cat: "WARM UP", name: "Standing Side Bends", duration: 60 },
         { cat: "WARM UP", name: "Rest", duration: 15 },
-        { cat: "MAIN WORK", name: "Twisting Planks → Side Plank", duration: 150 },
+        { cat: "MAIN WORK", name: "Twisting Planks → Side Plank", duration: 150, tip: "Slow transitions, 2 second hold in side plank, focus on rib-to-pelvis control."},
         { cat: "MAIN WORK", name: "Rest", duration: 15 },
-        { cat: "MAIN WORK", name: "Russian Twists", duration: 150 },
+        { cat: "MAIN WORK", name: "Russian Twists", duration: 150, tip: "Lean back until core engages; keep chest proud. Exhale with each twist"},
         { cat: "MAIN WORK", name: "Rest", duration: 15 },
-        { cat: "MAIN WORK", name: "Starfish Crunch", duration: 150 },
+        { cat: "MAIN WORK", name: "Starfish Crunch", duration: 150, tip: "Long reach, no momentum, think diagonal compression" },
         { cat: "MAIN WORK", name: "Rest", duration: 15 },
-        { cat: "MAIN WORK", name: "Side Plank with Hip Dips", duration: 150 },
+        { cat: "MAIN WORK", name: "Side Plank with Hip Dips (L)", duration: 75, tip: "Small range, constant tension" },
+        { cat: "MAIN WORK", name: "Rest", duration: 5 },
+        { cat: "MAIN WORK", name: "Side Plank with Hip Dips (R)", duration: 75, tip: "Small range, constant tension" },
         { cat: "MAIN WORK", name: "Rest", duration: 15 },
         { cat: "COOL DOWN", name: "Supine Twists", duration: 120 }
     ];
@@ -324,8 +317,76 @@ function startCoreRotation() {
     updateUI(); // Draw the list for the first time
 }
 
+function startCoreControl() {
+    // RESET GLOBAL STATE
+    clearInterval(workoutTimer);
+    currentStep = 0;
+    elapsed = 0;
+    isPaused = true;
+    
+    // Reset the Play button symbol when the workout starts
+    const playBtn = document.getElementById("play-pause-btn");
+    if (playBtn) playBtn.innerHTML = "&#9658;";
+
+    const overlayTitle = document.getElementById("overlay-title");
+    overlayTitle.innerText = "Core Control (15 Min)";
+    
+    // Update the global 'steps' array
+    steps = [
+        { cat: "WARM UP", name: "Dynamic Plank → Downward Dog", duration: 120 },
+        { cat: "WARM UP", name: "Rest", duration: 15 },
+        { cat: "WARM UP", name: "Cat-Cow", duration: 60 },
+        { cat: "WARM UP", name: "Rest", duration: 15 },
+        { cat: "MAIN WORK", name: "Bicycle Crunches", duration: 120 },
+        { cat: "MAIN WORK", name: "Rest", duration: 15 },
+        { cat: "MAIN WORK", name: "Twisting Bear Crawl", duration: 120 },
+        { cat: "MAIN WORK", name: "Rest", duration: 15 },
+        { cat: "MAIN WORK", name: "Twisting V-Ups", duration: 120 },
+        { cat: "MAIN WORK", name: "Rest", duration: 15 },
+        { cat: "MAIN WORK", name: "Plank Shoulder Taps + Knee Twists", duration: 120 },
+        { cat: "MAIN WORK", name: "Rest", duration: 15 },
+        { cat: "MAIN WORK", name: "Twisting Hollow Body Hold 40s on/20s off", duration: 120 },
+        { cat: "MAIN WORK", name: "Rest", duration: 15 },
+        { cat: "COOL DOWN", name: "Child's Pose with side stretch", duration: 60 },
+        { cat: "COOL DOWN", name: "Rest", duration: 15 },
+        { cat: "COOL DOWN", name: "Child's Pose with side stretch", duration: 60 }
+    ];
+
+    updateUI(); // Draw the list for the first time
+}
+
+function startMorningTimed() {
+    // 1. Show the Timer UI
+    document.querySelector(".timer-container").style.display = "flex";
+    document.querySelector(".workout-controls").style.display = "flex";
+    
+    // 2. Reset the Engine
+    clearInterval(workoutTimer);
+    currentStep = 0;
+    elapsed = 0;
+    isPaused = true;
+    document.getElementById("play-pause-btn").innerHTML = "&#9658;";
+
+    // 3. Define only the Timed parts
+    steps = [
+        { cat: "BALANCE", name: "One Leg Arm Circles (L)", duration: 60 },
+        { cat: "BALANCE", name: "One Leg Arm Circles (R)", duration: 60 },
+        { cat: "BALANCE", name: "One Leg Toes Clock Reaches (L)", duration: 60 },
+        { cat: "BALANCE", name: "One Leg Toes Clock Reaches (R)", duration: 60 },
+        { cat: "REST", name: "Get the Heart Rate Going", duration: 15 },
+        { cat: "SWEATY", name: "Toe Touches (30s) | Bicycle (30s)", duration: 60 },
+        { cat: "SWEATY", name: "Push Ups", duration: 60 },
+        { cat: "SWEATY", name: "Horse Stance with Side Bends", duration: 60 },
+        { cat: "SWEATY", name: "Plank", duration: 60 },
+        { cat: "SWEATY", name: "Pistol Squat (30s/side)", duration: 60 },
+        { cat: "SWEATY", name: "Crawl", duration: 60 }
+    ];
+
+    updateUI();
+}
+
 // 2. THE PAINTER (Draws the list)
-function updateUI() { // ...and finds the definition HERE
+function updateUI() {
     const content = document.getElementById("overlay-content");
     let html = `<div class="workout-list">`;
     let lastCategory = "";
@@ -345,14 +406,28 @@ function updateUI() { // ...and finds the definition HERE
         let secs = step.duration % 60;
         let timeDisplay = mins > 0 ? `${mins}m ${secs < 10 ? '0'+secs : secs}s` : `${secs}s`;
 
+        // Logic for Option 1: Add the Info Icon if a tip exists
+        const tipIcon = step.tip ? `<span class="tip-icon" onclick="alert('${step.tip.replace(/'/g, "\\'")}')">ⓘ</span>` : '';
+
         html += `<div class="exercise-item ${status}">
-                    <span class="step-name">${step.name}</span>
+                    <span class="step-name">${step.name} ${tipIcon}</span>
                     <span class="step-time">${timeDisplay}</span>
                  </div>`;
     });
     
-    html += `</div>`; // Close the backtick, THEN add the semicolon
+    html += `</div>`; 
     content.innerHTML = html;
+
+    // --- NEW: Update the bottom Active Tip Bar (Option 3) ---
+    const tipElement = document.getElementById("active-tip");
+    if (tipElement && steps[currentStep]) {
+        // If it's a 'Rest' step, you might want a generic message, otherwise show the tip
+        if (steps[currentStep].name === "Rest") {
+            tipElement.innerText = "Recover & Prep for next move";
+        } else {
+            tipElement.innerText = steps[currentStep].tip || "Keep your form tight!";
+        }
+    }
 }
 
 function togglePlayPause() {
