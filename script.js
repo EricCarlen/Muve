@@ -406,11 +406,17 @@ function updateUI() {
         let secs = step.duration % 60;
         let timeDisplay = mins > 0 ? `${mins}m ${secs < 10 ? '0'+secs : secs}s` : `${secs}s`;
 
-        // Logic for Option 1: Add the Info Icon if a tip exists
-        const tipIcon = step.tip ? `<span class="tip-icon" onclick="alert('${step.tip.replace(/'/g, "\\'")}')">ⓘ</span>` : '';
+        // 1. Create the Tech Note if a tip exists
+        // We only show it for 'active' or upcoming moves to save space
+        const techNote = (step.tip && status !== 'completed') 
+            ? `<div class="tech-note">${step.tip}</div>` 
+            : '';
 
         html += `<div class="exercise-item ${status}">
-                    <span class="step-name">${step.name} ${tipIcon}</span>
+                    <div class="exercise-info-wrapper">
+                        <span class="step-name">${step.name}</span>
+                        ${techNote}
+                    </div>
                     <span class="step-time">${timeDisplay}</span>
                  </div>`;
     });
@@ -418,10 +424,9 @@ function updateUI() {
     html += `</div>`; 
     content.innerHTML = html;
 
-    // --- NEW: Update the bottom Active Tip Bar (Option 3) ---
+    // 2. Update the bottom Active Tip Bar
     const tipElement = document.getElementById("active-tip");
     if (tipElement && steps[currentStep]) {
-        // If it's a 'Rest' step, you might want a generic message, otherwise show the tip
         if (steps[currentStep].name === "Rest") {
             tipElement.innerText = "Recover & Prep for next move";
         } else {

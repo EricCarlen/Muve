@@ -2,12 +2,13 @@ body {
     background-color: white;
     color: black;
     margin: 0;
-    padding: 0px;
-    display: flex:
+    padding: 0;
+    display: flex;
     flex-direction: column;
     align-items: center; /* Centers everything horizontally */
     min-height: 100vh;
     font-family: -apple-system, system-ui, sans-serif;
+    overflow-x: hidden;
 }
 
 /* The main wrapper for your grid/content */
@@ -83,7 +84,7 @@ button:hover {
     display: grid;
     grid-template-columns: repeat(2, 1fr); /* 3 columns for square feel */
     gap: 15px;
-    width: 92%;           /* Ensures there is ALWAYS a 4% gap on each side */
+    width: 90%;           /* Ensures there is ALWAYS a 4% gap on each side */
     max-width: 500px;     /* Keeps it tight on desktop */
     margin: 0 auto 20px;  /* Centers the grid and keeps the bottom margin */
     padding: 10px 0;      /* Adds a little vertical breathing room */
@@ -360,6 +361,7 @@ button:hover {
     border-bottom: 1px solid #f8f8f8;
     opacity: 0.2;
     transition: all 0.4s ease;
+    align-items: flex-start;
 }
 
 /* Active exercise still pops */
@@ -500,4 +502,35 @@ button:hover {
     letter-spacing: 0.5px;
     background: rgba(255, 255, 255, 0.9); /* Slight fade background */
     padding: 4px 0;
+}
+/* Keeps the name and note together on the left */
+.exercise-info-wrapper {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    flex: 1; /* Takes up available space */
+}
+
+/* The technical note styling */
+.tech-note {
+    font-size: 0.65rem;
+    color: #888;
+    margin-top: 4px;
+    padding-left: 8px;
+    border-left: 2px solid #eee; /* Subtle line to separate it */
+    line-height: 1.2;
+    font-weight: 400;
+    text-transform: none; /* Keep it as regular text for readability */
+    letter-spacing: 0;
+}
+
+/* Make the note pop more when the exercise is active */
+.exercise-item.active .tech-note {
+    color: #555;
+    border-left-color: #00ffcc; /* Your neon accent color */
+}
+/* Optional: This ensures the step-name doesn't look weird next to the note */
+.step-name {
+    display: block;
+    width: 100%;
 }
