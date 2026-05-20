@@ -8,6 +8,7 @@ body {
     align-items: center; /* Centers everything horizontally */
     min-height: 100vh;
     font-family: -apple-system, system-ui, sans-serif;
+    width: 100%;
     overflow-x: hidden;
 }
 
@@ -27,7 +28,6 @@ body {
     width: 100%;
     box-sizing: border-box; /* Crucial: includes padding in the 100% width */
     padding: 20px 5%;       /* 4% padding matches the 'gutter' of your 92% grid */
-    
     border-bottom: 1px solid #eee;
     margin-bottom: 30px;
 }
@@ -48,7 +48,8 @@ body {
     text-transform: uppercase;
     color: #666; /* A slight grey so it doesn't compete with the Logo */
 }
-button{
+
+button {
     background-color: #ffffff;  /* White button */
     color: #000000;             /* Black text */
     padding: 15px 30px;           /* Size of the button */
@@ -62,6 +63,7 @@ button{
 button:hover {
     background-color: #00ffcc; /* Turns neon green when you hover! */
 }
+
 /* This only triggers when the screen is narrower than 600px */
 @media (max-width: 600px) {
   h1 {
@@ -69,17 +71,18 @@ button:hover {
     padding: 0 20px;   /* Adds a little space so text doesn't hit the screen edges */
   }
 }
-/* 1. Hide the container on the main screen */
+
+/* Hide the container on the main screen */
 #workout-container {
     display: none;
 }
 
-/* 2. Remove all card styling */
+/* Remove all card styling */
 .card {
     display: none; /* We aren't using these at all anymore */
 }
+
 /* The 3x2 Grid for Categories */
-/* Ensure the grid keeps things tight */
 .category-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr); /* 3 columns for square feel */
@@ -90,6 +93,7 @@ button:hover {
     padding: 10px 0;      /* Adds a little vertical breathing room */
     box-sizing: border-box; 
 }
+
 /* Make Morning (the first button) span both columns */
 .category-grid .filter-btn:first-child {
     grid-column: span 2;
@@ -112,7 +116,6 @@ button:hover {
     padding-right: 15%;     /* Offsets the icon on the left to keep text centered */
 }
 
-
 .filter-btn {
     all: unset;
     width: 100%;          /* Forces the button to stay inside the grid cell */
@@ -126,7 +129,9 @@ button:hover {
     border-radius: 12px; 
     cursor: pointer;
     transition: 0.2s;
-    box-sizing: border-box; /* This is already here, which is good! */
+    box-sizing: border-box;
+    justify-content: center; /* Add this if the content inside the button looks shifted */
+    margin: 0;
 }
 
 /* Icon occupies the left 1/3 */
@@ -175,9 +180,7 @@ button:hover {
     z-index: 1000;
     display: none;
     flex-direction: column;
-    padding: 20px;
     box-sizing: border-box;
-    /* This allows the whole screen to scroll if the list is long */
     overflow-y: auto; 
 }
 
@@ -197,40 +200,23 @@ button:hover {
     display: flex; /* Helps center the arrow perfectly */
     align-items: center;
 }
-/* Ensure the hover state doesn't shift the layout */
+
 .close-btn:hover {
     opacity: 0.7;
 }
 
-/* The Magic Centering Container */
-#overlay-content {
-    display: flex;
-    flex-direction: column;
-    justify-content: center; /* Vertical center */
-    align-items: center;     /* Horizontal center */
-    text-align: center;
-    width: 100%;
-    /* margin: auto 0 is the secret for centering + scrolling */
-    margin: auto 0;         
-    min-height: min-content;
-    padding-bottom: 60px;    /* Adds space so the last item isn't cut off by the screen bottom */
-}
-
 #overlay-title {
-    flex-grow: 1; /* Allows the title to take up the middle space */
+    flex: 2; /* Takes up the middle */
     text-align: center;
-    font-size: 1rem;
+    font-size: 0.85rem;
+    font-weight: 800;
     letter-spacing: 1px;
     margin: 0;
+    text-transform: uppercase;
 }
 
 #overlay-title::after {
-    content: "";
-    display: block;
-    width: 30px;
-    height: 1px;
-    background: black;
-    margin: 15px auto;
+    display: none;
 }
 
 #overlay-content {
@@ -239,6 +225,8 @@ button:hover {
     align-items: center;    /* This centers the blocks horizontally */
     text-align: center;
     width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
 }
 
 #overlay-content strong {
@@ -246,9 +234,6 @@ button:hover {
     margin-right: 8px;
 }
 
-/* --- Workout Overlay Content Styling --- */
-
-/* 1. The "2-3 SETS" Header */
 .set-counter {
     font-size: 0.8rem;
     font-weight: 800;
@@ -263,14 +248,31 @@ button:hover {
 
 .workout-header {
     display: flex;
-    justify-content: space-between; /* Pushes arrow left, spacer right, title center */
+    justify-content: space-between;
     align-items: center;
-    padding: 15px 20px;
+    padding: 10px 20px;
     background: #fff;
     border-bottom: 1px solid #eee;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    height: 60px;
 }
 
-/* The Gap between A, B, and C groups */
+.header-left, .header-right {
+    flex: 1;
+    display: flex;
+    align-items: center;
+}
+
+.header-right {
+    justify-content: flex-end;
+}
+
+.header-spacer {
+    width: 50px; 
+}
+
 .workout-block {
     display: flex;
     flex-direction: column;
@@ -287,32 +289,27 @@ button:hover {
     width: 100%;
 }
 
-/* Taps into the paragraphs inside your blocks to bring A1 & A2 together */
 .workout-block p {
     margin: 2px 0;    /* Very small vertical gap */
     padding: 0;       /* Ensures no hidden internal spacing */
 }
 
-/* Optional: Makes the A1, B1 part stand out slightly */
 .workout-block p strong {
     color: #333;      /* Makes the label a bit bolder/darker */
     margin-right: 5px; 
 }
-/* Container to help center the link and add space */
+
 .workout-link-container {
     margin-top: 30px;      /* Space above the entire section */
     padding-top: 20px;
     border-top: 1px solid #eee; 
     width: 100%;
-    
-    /* The Fix: Stack items vertically with a gap */
     display: flex;
     flex-direction: column; 
     align-items: center;    /* Keeps everything centered horizontally */
     gap: 20px;              /* This adds the perfect 20px space between text and button */
 }
 
-/* The 'Next' button styling */
 .link-btn {
     background: none;
     border: 1px solid #333;
@@ -335,7 +332,6 @@ button:hover {
     color: #fff;
 }
 
-/* Styling and centering the section headers like WARM UP */
 .block-title {
     display: block;
     text-align: center;
@@ -347,13 +343,12 @@ button:hover {
     text-transform: uppercase;
     font-size: 0.9rem;
 }
-/* Container for the workout steps */
+
 .workout-list {
     margin-top: 20px;
     padding: 0 5%;
 }
 
-/* Tighten the list spacing */
 .exercise-item {
     display: flex;
     justify-content: space-between;
@@ -364,52 +359,91 @@ button:hover {
     align-items: flex-start;
 }
 
-/* Active exercise still pops */
 .exercise-item.active {
     opacity: 1;
     font-weight: 700;
 }
 
-/* Completed items stay dimmed */
 .exercise-item.completed {
     opacity: 0.1;
 }
 
-/* The Timer Bar Container (Thicker to hold text) */
+/* ==========================================================================
+   UPDATED & FIXED: BOTTOM TIMER DESIGN
+   ========================================================================== */
+
+/* The overall container at the very bottom */
 .timer-container {
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 30px; /* Increased to fit text */
-    background: #f0f0f0;
+    background: #ffffff;          
+    border-top: 1px solid #eee;   
     z-index: 1001;
-    display: none;
-    align-items: center; /* Centers the countdown vertically */
+    display: none;                /* Changed to flex layout to cleanly stack header and bar */
+    flex-direction: column;
+    padding: 15px 25px 20px;      
+    box-sizing: border-box;
 }
 
-/* The Countdown Text inside the bar */
+/* The layout row holding your elements */
+.timer-header {
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;          /* Aligns items vertically down the center line */
+    width: 100%;
+    margin-bottom: 5px;             
+}
+
+/* Left spacer and right countdown get equal width sizing to force the tip dead-center */
+.timer-spacer, 
 #timer-countdown {
-    position: absolute;
-    right: 15px; /* Puts it on the right side */
+    flex: 1;                      /* Both take up identical hidden boundaries on the sides */
+    min-width: 50px;              /* Ensures space is reserved */
+}
+
+/* The Workout Tip Text (stretching center inside its boundary) */
+#active-tip {
+    flex: 2;                      /* Gives the center text more breathing room to grow */
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    text-align: center;           /* Locks the words cleanly in the absolute middle */
+}
+
+/* The Countdown Text (stretching right inside its boundary) */
+#timer-countdown {
     font-family: monospace;
-    font-weight: bold;
-    font-size: 0.9rem;
+    font-weight: 800;
+    font-size: 1.1rem;
     color: #000;
-    z-index: 1002; /* Sits on top of the black bar */
+    text-align: right;            /* Keeps clock text aligned nicely against the right screen margin */
 }
 
-.timer-bar {
-    height: 100%;
-    background: #000000; /* A slightly darker gray for the progress */
-    width: 0%;
-    transition: width 1s linear;
-    /* Optional: adds a slight curve to the leading edge */
-    border-top-right-radius: 4px; 
-    border-bottom-right-radius: 4px;
+/* The background track layout container */
+#progress-background {
+    width: 100%;                  
+    height: 14px;                 
+    background-color: #eee;       
+    border-radius: 50px;          
+    overflow: hidden;             
+    position: relative;
 }
 
-/* Specific styling for the Rest rows */
+/* The actual working progress bar filling the track cleanly */
+#progress.timer-bar {
+    height: 100%;                 
+    width: 0%;                    
+    background: #000000;          
+    border-radius: 50px;
+    transition: width 1s linear;  
+}
+
+/* ========================================================================== */
+
 .exercise-item.rest {
     padding: 4px 0; /* Even tighter for rest */
     font-size: 0.75rem; /* Smaller text */
@@ -429,38 +463,32 @@ button:hover {
     display: block;
 }
 
-/* Remove the top margin from the very first title */
 .workout-section-title:first-child {
     margin-top: 10px;
 }
-/* Container for the Play and Skip buttons */
+
+/* --- CONTROLS --- */
 .workout-controls {
-    display: none;
+    display: none; /* JS will change this to flex when Timed mode is on */
     justify-content: center;
     gap: 20px;
-    margin: 10px 0 20px 0; /* Tightens the gap to shift things up */
+    padding: 20px 0;
+    width: 100%;
 }
 
 .control-btn {
-    /* Reset these first */
     padding: 0;
     min-width: 0; 
-    
-    /* Set exact dimensions */
     width: 50px;
     height: 50px;
     border-radius: 50%; /* This makes it a circle */
-    
     background: #000;
     color: #fff;
     border: none;
     cursor: pointer;
-    
-    /* The secret to centering symbols */
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    
     font-size: 1.2rem;
     line-height: 1;
 }
@@ -473,9 +501,10 @@ button:hover {
     background: #f8f8f8;
     color: #000;
     border: 1px solid #ddd;
-    width: 50px; /* Slightly smaller skip button looks more balanced */
+    width: 50px; 
     height: 50px;
 }
+
 .tip-icon {
     font-size: 0.8rem;
     color: #007AFF; /* App-style blue */
@@ -489,21 +518,6 @@ button:hover {
     opacity: 1;
 }
 
-#active-tip {
-    position: absolute;
-    top: -25px; /* Sits right above the gray timer bar */
-    left: 0;
-    width: 100%;
-    text-align: center;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #666;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    background: rgba(255, 255, 255, 0.9); /* Slight fade background */
-    padding: 4px 0;
-}
-/* Keeps the name and note together on the left */
 .exercise-info-wrapper {
     display: flex;
     flex-direction: column;
@@ -511,7 +525,6 @@ button:hover {
     flex: 1; /* Takes up available space */
 }
 
-/* The technical note styling */
 .tech-note {
     font-size: 0.65rem;
     color: #888;
@@ -520,17 +533,122 @@ button:hover {
     border-left: 2px solid #eee; /* Subtle line to separate it */
     line-height: 1.2;
     font-weight: 400;
-    text-transform: none; /* Keep it as regular text for readability */
+    text-transform: none; 
     letter-spacing: 0;
 }
 
-/* Make the note pop more when the exercise is active */
 .exercise-item.active .tech-note {
     color: #555;
     border-left-color: #00ffcc; /* Your neon accent color */
 }
-/* Optional: This ensures the step-name doesn't look weird next to the note */
+
 .step-name {
     display: block;
     width: 100%;
+}
+
+.mode-toggle-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    font-weight: bold;
+    color: #000;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.switch input { opacity: 0; width: 0; height: 0; }
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px; width: 18px;
+    left: 3px; bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider { background-color: #00ffcc; } /* Your neon color */
+input:checked + .slider:before { transform: translateX(26px); }
+
+.header-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.65rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.switch.small {
+    width: 40px;
+    height: 20px;
+}
+
+.switch.small .slider:before {
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+}
+
+.switch.small input:checked + .slider:before { 
+    transform: translateX(20px); 
+}
+
+.app-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 50px;
+    background-color: #ffffff;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    box-sizing: border-box;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #666;
+    z-index: 999; 
+}
+
+.footer-left, .footer-right, .footer-center {
+    flex: 1;
+    display: flex;
+    align-items: center;
+}
+
+.footer-center {
+    justify-content: center;
+}
+
+.footer-right {
+    justify-content: flex-end;
+}
+
+body {
+    padding-bottom: 60px; 
 }

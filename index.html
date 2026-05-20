@@ -11,69 +11,107 @@
         <h1 id="brand-logo">MUVE</h1>
         <span id="greeting"></span>
     </header>
-<div class="category-grid">
-    <button class="filter-btn" onclick="filterWorkouts('morning')">
-        <svg viewBox="0 0 24 24"><path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="M2 12h2"/><path d="m4.93 19.07 1.41-1.41"/><path d="M12 20v2"/><path d="m17.66 17.66 1.41 1.41"/><path d="M20 12h2"/><path d="m17.66 6.34 1.41-1.41"/><circle cx="12" cy="12" r="4"/></svg>
-        <span>Morning</span>
-    </button>
 
-    <button class="filter-btn" onclick="filterWorkouts('upper body')">
-        <svg viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.2 2.2-1.5 3.5-4 3.5-6.8a1 1 0 0 0-1-1 9 9 0 0 0-9 9"/><path d="M11 13c-1-1.5-2.5-2-4.5-2-2 0-3.5.5-4.5 2a4 4 0 0 0 0 4c1 1.5 2.5 2 4.5 2 2 0 3.5-.5 4.5-2a4 4 0 0 0 0-4Z"/><path d="M12 11v2"/></svg>
-        <span>Upper Body</span>
-    </button>
-
-    <button class="filter-btn" onclick="filterWorkouts('core rotation')">
-        <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
-        <span>Core Rotation</span>
-    </button>
-
-    <button class="filter-btn" onclick="filterWorkouts('lower body')">
-        <svg viewBox="0 0 24 24"><path d="M2 21h20"/><path d="M6 21V16H10V11H14V6H18V1"/></svg>
-        <span>Lower Body</span>
-    </button>
-
-    <button class="filter-btn" onclick="filterWorkouts('core control')">
-        <svg viewBox="0 0 24 24"><path d="m16 16 3-8 3 8c-.87.67-1.93 1-3 1s-2.13-.33-3-1Z"/><path d="m2 16 3-8 3 8c-.87.67-1.93 1-3 1s-2.13-.33-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h18"/></svg>
-        <span>Core Control</span>
-    </button>
-
+    <div class="category-grid">
+        <button class="filter-btn" onclick="filterWorkouts('morning')">
+            <svg viewBox="0 0 24 24"><path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="M2 12h2"/><path d="m4.93 19.07 1.41-1.41"/><path d="M12 20v2"/><path d="m17.66 17.66 1.41 1.41"/><path d="M20 12h2"/><path d="m17.66 6.34 1.41-1.41"/><circle cx="12" cy="12" r="4"/></svg>
+            <span>Morning</span>
+        </button>
+        <button class="filter-btn" onclick="filterWorkouts('upper body')">
+            <svg viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.2 2.2-1.5 3.5-4 3.5-6.8a1 1 0 0 0-1-1 9 9 0 0 0-9 9"/><path d="M11 13c-1-1.5-2.5-2-4.5-2-2 0-3.5.5-4.5 2a4 4 0 0 0 0 4c1 1.5 2.5 2 4.5 2 2 0 3.5-.5 4.5-2a4 4 0 0 0 0-4Z"/><path d="M12 11v2"/></svg>
+            <span>Upper Body</span>
+        </button>
+        <button class="filter-btn" onclick="filterWorkouts('core rotation')">
+            <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+            <span>Core Rotation</span>
+        </button>
+        <button class="filter-btn" onclick="filterWorkouts('lower body')">
+            <svg viewBox="0 0 24 24"><path d="M2 21h20"/><path d="M6 21V16H10V11H14V6H18V1"/></svg>
+            <span>Lower Body</span>
+        </button>
+        <button class="filter-btn" onclick="filterWorkouts('core control')">
+            <svg viewBox="0 0 24 24"><path d="m16 16 3-8 3 8c-.87.67-1.93 1-3 1s-2.13-.33-3-1Z"/><path d="m2 16 3-8 3 8c-.87.67-1.93 1-3 1s-2.13-.33-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h18"/></svg>
+            <span>Core Control</span>
+        </button>
         <button class="filter-btn" onclick="filterWorkouts('strength side')">
-        <svg viewBox="0 0 24 24"><path d="m8 3 4 8 5-5 5 15H2L8 3Z"/></svg>
-        <span>Strength Side</span>
-    </button>
-
+            <svg viewBox="0 0 24 24"><path d="m8 3 4 8 5-5 5 15H2L8 3Z"/></svg>
+            <span>Strength Side</span>
+        </button>
         <button class="filter-btn" onclick="filterWorkouts('mobility Side')">
-        <svg viewBox="0 0 24 24"><path d="M12 3c1.5 4 3 4 5 5 1.5 1 2 2 2 4 0 2-1.5 3-3 3-1.5 0-3-1-4-3-1 2-2.5 3-4 3-1.5 0-3-1-3-3 0-2 .5-3 2-4 2-1 3.5-1 5-5Z"/><path d="M12 10V21"/><path d="M12 21c-3-2-6-3-6-6"/><path d="M12 21c3-2 6-3 6-6"/></svg>
-        <span>Mobility Side</span>
-    </button>
+            <svg viewBox="0 0 24 24"><path d="M12 3c1.5 4 3 4 5 5 1.5 1 2 2 2 4 0 2-1.5 3-3 3-1.5 0-3-1-4-3-1 2-2.5 3-4 3-1.5 0-3-1-3-3 0-2 .5-3 2-4 2-1 3.5-1 5-5Z"/><path d="M12 10V21"/><path d="M12 21c-3-2-6-3-6-6"/><path d="M12 21c3-2 6-3 6-6"/></svg>
+            <span>Mobility Side</span>
+        </button>
+        <button class="filter-btn" onclick="filterWorkouts('evening')">
+            <svg viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+            <span>Evening</span>
+        </button>
+    </div>
 
-    <button class="filter-btn" onclick="filterWorkouts('evening')">
-        <svg viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-        <span>Evening</span>
-    </button>
-
-</div>
-
+    <!-- WORKOUT OVERLAY -->
     <div id="workout-overlay" class="overlay">
+        <!-- TOP HEADER BAR -->
+        <div class="workout-header">
+            <div class="header-left">
+                <button class="close-btn" onclick="closeWorkout()">&#8592;</button>
+            </div>
+            
+            <h1 id="overlay-title">WORKOUT</h1>
+
+            <div class="header-right">
+                <div class="header-toggle">
+                    <span>List</span>
+                    <label class="switch small">
+                        <input type="checkbox" id="mode-toggle" onchange="refreshWorkoutView()" checked>
+                        <span class="slider round"></span>
+                    </label>
+                    <span>Timed</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- CENTER CONTROLS -->
+        <div class="workout-controls" id="workout-controls">
+            <button id="play-pause-btn" class="control-btn" onclick="togglePlayPause()">&#9658;</button>
+            <button id="skip-btn" class="control-btn" onclick="skipStep()">&#10141;</button>
+        </div>
+
+        <!-- WORKOUT CONTENT -->
+        <div id="overlay-content"></div>
+
+        <!-- BOTTOM TIMER -->
+<!-- BOTTOM TIMER -->
+<div class="timer-container">
+    <div class="timer-header">
+        <!-- 1. Invisible spacer to balance out the countdown on the right -->
+        <div class="timer-spacer"></div>
         
-    <div class="workout-header">
-        <button class="close-btn" onclick="closeWorkout()">&#8592;</button>
-        <h1 id="overlay-title">CORE ROTATION</h1>
-        <div style="width: 24px;"></div>
+        <!-- 2. The tip stays perfectly in the middle -->
+        <div id="active-tip">Get ready...</div> 
+        
+        <!-- 3. The countdown stays on the right -->
+        <div id="timer-countdown">0:00</div>
     </div>
-
-    <div class="workout-controls">
-        <button id="play-pause-btn" class="control-btn" onclick="togglePlayPause()">&#9658;</button>
-        <button id="skip-btn" class="control-btn" onclick="skipStep()">&#10141;</button>
+    
+    <div id="progress-background">
+        <div id="progress" class="timer-bar"></div>
     </div>
-    <div id="overlay-content"></div>
-
-    <div class="timer-container">
-    <div id="active-tip">Get ready...</div> <div id="progress-background">
-        <div id="progress"></div>
-    </div>
-    <div id="timer-countdown">0:00</div>
 </div>
+    </div>
+
+<footer class="app-footer">
+    <div class="footer-left">
+        <span>Day <span id="day-of-year">--</span></span>
+    </div>
+    
+    <!-- Future Login Placeholder -->
+    <div class="footer-center">
+        <!-- <button class="login-btn">Login</button> -->
+    </div>
+    
+    <div class="footer-right">
+        <span>Week <span id="week-of-year">--</span></span>
+    </div>
+</footer>
 
     <script src="script.js"></script>
 </body>
