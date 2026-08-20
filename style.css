@@ -1,3 +1,12 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html {
+    overflow-x: hidden;
+    width: 100%;
+}
+
 body {
     background-color: white;
     color: black;
@@ -9,9 +18,10 @@ body {
     min-height: 100vh;
     font-family: -apple-system, system-ui, sans-serif;
     width: 100%;
+    max-width: 100%;
     overflow-x: hidden;
 }
- 
+
 /* The main wrapper for your grid/content */
 .main-container {
     width: 90%;            /* Keeps a 5% gap on both sides */
@@ -20,7 +30,7 @@ body {
     padding: 20px 0;       /* Space at the top and bottom */
     box-sizing: border-box; /* Ensures padding doesn't break the width */
 }
- 
+
 .main-header {
     display: flex;
     justify-content: space-between; /* Brand Left, Greeting Right */
@@ -30,8 +40,10 @@ body {
     padding: 20px 5%;       /* 4% padding matches the 'gutter' of your 92% grid */
     border-bottom: 1px solid #eee;
     margin-bottom: 30px;
+    gap: 10px;
+    flex-wrap: wrap;
 }
- 
+
 #brand-logo {
     font-size: 0.9rem;
     font-weight: 800;
@@ -40,7 +52,7 @@ body {
     letter-spacing: 2px;
     text-align: left;
 }
- 
+
 #greeting {
     font-size: 0.7rem;
     font-weight: 400;
@@ -48,7 +60,7 @@ body {
     text-transform: uppercase;
     color: #666; /* A slight grey so it doesn't compete with the Logo */
 }
- 
+
 button {
     background-color: #ffffff;  /* White button */
     color: #000000;             /* Black text */
@@ -59,11 +71,11 @@ button {
     cursor: pointer;              /* Shows the 'hand' icon on hover */
     transition: 0.3s;             /* Smooth color change */
 }
- 
+
 button:hover {
     background-color: #00ffcc; /* Turns neon green when you hover! */
 }
- 
+
 /* This only triggers when the screen is narrower than 600px */
 @media (max-width: 600px) {
   h1 {
@@ -71,51 +83,102 @@ button:hover {
     padding: 0 20px;   /* Adds a little space so text doesn't hit the screen edges */
   }
 }
- 
+
 /* Hide the container on the main screen */
 #workout-container {
     display: none;
 }
- 
+
 /* Remove all card styling */
 .card {
     display: none; /* We aren't using these at all anymore */
 }
- 
-/* The 3x2 Grid for Categories */
+
+/* The 2-column grid, reused for the "My Workouts" section */
 .category-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr); /* 3 columns for square feel */
+    grid-template-columns: repeat(2, 1fr);
     gap: 15px;
-    width: 90%;           /* Ensures there is ALWAYS a 4% gap on each side */
-    max-width: 500px;     /* Keeps it tight on desktop */
-    margin: 0 auto 20px;  /* Centers the grid and keeps the bottom margin */
-    padding: 10px 0;      /* Adds a little vertical breathing room */
+    width: 90%;
+    max-width: 500px;
+    margin: 0 auto 20px;
+    padding: 10px 0;
     box-sizing: border-box;
 }
- 
-/* Make Morning (the first button) span both columns */
-.category-grid .filter-btn:first-child {
-    grid-column: span 2;
-    aspect-ratio: 8.09 / 1; /* Double the Golden Ratio width (1.618 * 2) */
-    margin-bottom: 5px;    /* A little extra space before the main grid */
+
+/* The front page: 6 curated examples, stacked in one centered column */
+.category-grid.single-column {
+    grid-template-columns: 1fr;
+    max-width: 380px;
+    gap: 12px;
 }
- 
-/* Make Evening (the last button) span both columns */
-.category-grid .filter-btn:last-child {
-    grid-column: span 2;
-    aspect-ratio: 8.09 / 1;
-    margin-top: 5px;       /* A little extra space after the main grid */
+
+.category-grid.single-column .filter-btn {
+    aspect-ratio: 7.5 / 1;
+    padding: 8px 14px;
 }
- 
-/* Adjust the inner content for the wider "Thin" buttons */
-.category-grid .filter-btn:first-child span,
-.category-grid .filter-btn:last-child span {
-    flex: 3;                /* More room for text in the wide buttons */
-    text-align: center;     /* Looks better centered when the button is this wide */
-    padding-right: 15%;     /* Offsets the icon on the left to keep text centered */
+
+.category-grid.single-column .filter-btn span {
+    flex: none;
+    text-align: center;
+    padding: 0;
+    font-size: 0.7rem;
 }
- 
+
+.signin-prompt {
+    text-align: center;
+    font-size: 0.75rem;
+    color: #888;
+    margin: 10px auto 30px;
+    max-width: 400px;
+    padding: 0 20px;
+}
+
+.my-workouts-section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.section-title {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #888;
+    margin: 10px 0 15px;
+    text-align: center;
+}
+
+/* My Workouts buttons have no icon, so they lay out as simple text pills */
+.my-workout-btn {
+    aspect-ratio: auto;
+    min-height: 50px;
+    padding: 12px 16px;
+    justify-content: space-between;
+}
+
+.my-workout-btn span:first-child {
+    flex: 1;
+    text-align: left;
+    padding-left: 0;
+    font-size: 0.7rem;
+}
+
+.my-workout-btn.create-btn {
+    border-style: dashed;
+    color: #007a63;
+}
+
+.delete-workout-btn {
+    color: #c00;
+    font-size: 1rem;
+    line-height: 1;
+    padding-left: 8px;
+    flex: none;
+}
+
 .filter-btn {
     all: unset;
     width: 100%;          /* Forces the button to stay inside the grid cell */
@@ -133,7 +196,7 @@ button:hover {
     justify-content: center; /* Add this if the content inside the button looks shifted */
     margin: 0;
 }
- 
+
 /* Icon occupies the left 1/3 */
 .filter-btn svg {
     flex: 1;                 /* Takes up 1 part of the space */
@@ -146,7 +209,7 @@ button:hover {
     stroke-width: 2;
     margin-bottom: 0;        /* Removed the bottom margin from the old vertical look */
 }
- 
+
 /* Text occupies the right 2/3 */
 .filter-btn span {
     flex: 2;                 /* Takes up 2 parts of the space */
@@ -157,18 +220,18 @@ button:hover {
     font-weight: 700;
     letter-spacing: 0.5px;
 }
- 
+
 /* This makes the button react when you press it, and marks the active category */
 .filter-btn:active, .filter-btn.active {
     background: #000; /* Black background */
     color: #fff;      /* White text */
 }
- 
+
 /* This ensures the icon also changes color when the button is active */
 .filter-btn:active svg, .filter-btn.active svg {
     stroke: #fff;
 }
- 
+
 /* The Overlay Background */
 .overlay {
     position: fixed;
@@ -183,11 +246,11 @@ button:hover {
     box-sizing: border-box;
     overflow-y: auto;
 }
- 
+
 .overlay.active {
     display: flex;
 }
- 
+
 .close-btn {
     background: none;
     border: none;
@@ -200,11 +263,11 @@ button:hover {
     display: flex; /* Helps center the arrow perfectly */
     align-items: center;
 }
- 
+
 .close-btn:hover {
     opacity: 0.7;
 }
- 
+
 #overlay-title {
     flex: 2; /* Takes up the middle */
     text-align: center;
@@ -213,12 +276,16 @@ button:hover {
     letter-spacing: 1px;
     margin: 0;
     text-transform: uppercase;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
 }
- 
+
 #overlay-title::after {
     display: none;
 }
- 
+
 #overlay-content {
     display: flex;
     flex-direction: column;
@@ -228,12 +295,12 @@ button:hover {
     padding: 20px;
     box-sizing: border-box;
 }
- 
+
 #overlay-content strong {
     font-weight: 700;
     margin-right: 8px;
 }
- 
+
 .set-counter {
     font-size: 0.8rem;
     font-weight: 800;
@@ -245,7 +312,7 @@ button:hover {
     color: #888;
     display: block; /* Ensures it stays on its own line */
 }
- 
+
 .workout-header {
     display: flex;
     justify-content: space-between;
@@ -258,21 +325,21 @@ button:hover {
     z-index: 10;
     height: 60px;
 }
- 
+
 .header-left, .header-right {
     flex: 1;
     display: flex;
     align-items: center;
 }
- 
+
 .header-right {
     justify-content: flex-end;
 }
- 
+
 .header-spacer {
     width: 50px;
 }
- 
+
 .workout-link-container {
     margin-top: 30px;      /* Space above the entire section */
     padding-top: 20px;
@@ -283,7 +350,7 @@ button:hover {
     align-items: center;    /* Keeps everything centered horizontally */
     gap: 20px;              /* This adds the perfect 20px space between text and button */
 }
- 
+
 .link-btn {
     background: none;
     border: 1px solid #333;
@@ -296,23 +363,23 @@ button:hover {
     cursor: pointer;
     transition: all 0.3s ease;
 }
- 
+
 .link-btn span {
     margin-left: 8px;
 }
- 
+
 .link-btn:hover {
     background: #333;
     color: #fff;
 }
- 
+
 .workout-list {
     margin-top: 20px;
     padding: 0 5%;
     width: 100%;
     box-sizing: border-box;
 }
- 
+
 .exercise-item {
     display: flex;
     justify-content: space-between;
@@ -322,27 +389,27 @@ button:hover {
     transition: all 0.4s ease;
     align-items: flex-start;
 }
- 
+
 .exercise-item.active {
     opacity: 1;
     font-weight: 700;
 }
- 
+
 .exercise-item.completed {
     opacity: 0.1;
 }
- 
+
 /* List Mode: every exercise is fully readable and equally weighted,
    since there's no active/completed timer state to track. */
 .exercise-item.list {
     opacity: 1;
     font-weight: 500;
 }
- 
+
 /* ==========================================================================
    BOTTOM TIMER DESIGN
    ========================================================================== */
- 
+
 .timer-container {
     position: fixed;
     bottom: 0;
@@ -356,7 +423,7 @@ button:hover {
     padding: 15px 25px 20px;
     box-sizing: border-box;
 }
- 
+
 .timer-header {
     display: flex;
     justify-content: space-between;
@@ -364,13 +431,13 @@ button:hover {
     width: 100%;
     margin-bottom: 5px;
 }
- 
+
 .timer-spacer,
 #timer-countdown {
     flex: 1;
     min-width: 50px;
 }
- 
+
 #active-tip {
     flex: 2;
     font-size: 0.75rem;
@@ -380,7 +447,7 @@ button:hover {
     letter-spacing: 0.8px;
     text-align: center;
 }
- 
+
 #timer-countdown {
     font-family: monospace;
     font-weight: 800;
@@ -388,7 +455,7 @@ button:hover {
     color: #000;
     text-align: right;
 }
- 
+
 #progress-background {
     width: 100%;
     height: 14px;
@@ -397,7 +464,7 @@ button:hover {
     overflow: hidden;
     position: relative;
 }
- 
+
 #progress.timer-bar {
     height: 100%;
     width: 0%;
@@ -405,9 +472,9 @@ button:hover {
     border-radius: 50px;
     transition: width 1s linear;
 }
- 
+
 /* ========================================================================== */
- 
+
 .exercise-item.rest {
     padding: 4px 0;
     font-size: 0.75rem;
@@ -415,7 +482,7 @@ button:hover {
     border-bottom: none;
     font-style: italic;
 }
- 
+
 .workout-section-title {
     font-size: 0.85rem;
     color: #888;
@@ -426,11 +493,11 @@ button:hover {
     font-weight: 700;
     display: block;
 }
- 
+
 .workout-section-title:first-child {
     margin-top: 10px;
 }
- 
+
 /* --- CONTROLS --- */
 .workout-controls {
     display: none; /* JS will change this to flex when Timed mode is on */
@@ -439,7 +506,7 @@ button:hover {
     padding: 20px 0;
     width: 100%;
 }
- 
+
 .control-btn {
     padding: 0;
     min-width: 0;
@@ -456,11 +523,11 @@ button:hover {
     font-size: 1.2rem;
     line-height: 1;
 }
- 
+
 .control-btn:active {
     transform: scale(0.9);
 }
- 
+
 #skip-btn {
     background: #f8f8f8;
     color: #000;
@@ -468,14 +535,14 @@ button:hover {
     width: 50px;
     height: 50px;
 }
- 
+
 .exercise-info-wrapper {
     display: flex;
     flex-direction: column;
     text-align: left;
     flex: 1;
 }
- 
+
 .tech-note {
     font-size: 0.65rem;
     color: #888;
@@ -487,33 +554,33 @@ button:hover {
     text-transform: none;
     letter-spacing: 0;
 }
- 
+
 .exercise-item.active .tech-note {
     color: #555;
     border-left-color: #00ffcc; /* Your neon accent color */
 }
- 
+
 .step-name {
     display: block;
     width: 100%;
 }
- 
+
 .step-time {
     font-size: 0.7rem;
     color: #999;
     white-space: nowrap;
     padding-left: 10px;
 }
- 
+
 .switch {
     position: relative;
     display: inline-block;
     width: 50px;
     height: 24px;
 }
- 
+
 .switch input { opacity: 0; width: 0; height: 0; }
- 
+
 .slider {
     position: absolute;
     cursor: pointer;
@@ -522,7 +589,7 @@ button:hover {
     transition: .4s;
     border-radius: 24px;
 }
- 
+
 .slider:before {
     position: absolute;
     content: "";
@@ -532,10 +599,10 @@ button:hover {
     transition: .4s;
     border-radius: 50%;
 }
- 
+
 input:checked + .slider { background-color: #00ffcc; } /* Your neon color */
 input:checked + .slider:before { transform: translateX(26px); }
- 
+
 .header-toggle {
     display: flex;
     align-items: center;
@@ -545,35 +612,36 @@ input:checked + .slider:before { transform: translateX(26px); }
     text-transform: uppercase;
     letter-spacing: 1px;
 }
- 
+
 .switch.small {
     width: 40px;
     height: 20px;
 }
- 
+
 .switch.small .slider:before {
     height: 14px;
     width: 14px;
     left: 3px;
     bottom: 3px;
 }
- 
+
 .switch.small input:checked + .slider:before {
     transform: translateX(20px);
 }
- 
+
 .app-footer {
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 50px;
+    min-height: 50px;
     background-color: #ffffff;
     border-top: 1px solid #eee;
     display: flex;
-    justify-content: space-between;
+    flex-wrap: wrap;
+    justify-content: center;
     align-items: center;
-    padding: 0 20px;
+    padding: 8px 12px;
     box-sizing: border-box;
     font-size: 0.75rem;
     font-weight: 600;
@@ -581,26 +649,78 @@ input:checked + .slider:before { transform: translateX(26px); }
     letter-spacing: 1px;
     color: #666;
     z-index: 999;
+    gap: 6px 16px;
 }
- 
+
 .footer-left, .footer-right, .footer-center {
-    flex: 1;
     display: flex;
     align-items: center;
-}
- 
-.footer-center {
     justify-content: center;
+    flex: 0 0 auto;
 }
- 
-.footer-right {
-    justify-content: flex-end;
+
+/* On narrow screens, shrink and reflow so nothing forces horizontal scrolling */
+@media (max-width: 420px) {
+    .app-footer {
+        font-size: 0.65rem;
+        letter-spacing: 0.5px;
+        padding: 6px 8px;
+    }
+
+    .auth-btn {
+        font-size: 0.6rem;
+        padding: 5px 10px;
+    }
+
+    .profile-chip {
+        font-size: 0.6rem;
+    }
 }
- 
+
+/* ---- Decorative background stick figures ---- */
+.bg-figures {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.fig {
+    position: absolute;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    color: #000;
+    opacity: 0.05;
+}
+
+.fig.accent {
+    color: #00b894;
+    opacity: 0.12;
+}
+
+.fig1  { top: 6%;  left: 4%;   width: 46px; transform: rotate(-8deg); }
+.fig2  { top: 18%; right: 6%;  width: 54px; transform: rotate(10deg); }
+.fig3  { top: 32%; left: 8%;   width: 60px; transform: rotate(-4deg); }
+.fig4  { top: 46%; right: 4%;  width: 48px; transform: rotate(6deg); }
+.fig5  { top: 58%; left: 5%;   width: 50px; transform: rotate(-12deg); }
+.fig6  { top: 70%; right: 8%;  width: 44px; transform: rotate(4deg); }
+.fig7  { top: 82%; left: 10%;  width: 40px; transform: rotate(-6deg); }
+.fig8  { top: 4%;  right: 22%; width: 38px; transform: rotate(14deg); }
+.fig9  { top: 90%; right: 20%; width: 42px; transform: rotate(-10deg); }
+.fig10 { top: 62%; left: 32%;  width: 36px; transform: rotate(8deg); }
+
+@media (max-width: 600px) {
+    .fig8, .fig9, .fig10 { display: none; } /* keep it uncluttered on small screens */
+}
+
 body {
-    padding-bottom: 60px;
+    padding-bottom: 70px;
 }
- 
+
 /* ---- Login / Profile ---- */
 .auth-btn {
     background: #000;
@@ -611,12 +731,12 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
- 
+
 .auth-btn:hover {
     background: #00ffcc;
     color: #000;
 }
- 
+
 .profile-chip {
     display: flex;
     align-items: center;
@@ -626,7 +746,7 @@ body {
     font-size: 0.7rem;
     font-weight: 700;
 }
- 
+
 .profile-chip img {
     width: 22px;
     height: 22px;
@@ -634,7 +754,7 @@ body {
     object-fit: cover;
     background: #eee;
 }
- 
+
 .profile-menu {
     display: none;
     position: absolute;
@@ -648,11 +768,11 @@ body {
     overflow: hidden;
     z-index: 1002;
 }
- 
+
 .profile-chip.open .profile-menu {
     display: block;
 }
- 
+
 .profile-menu button {
     display: block;
     width: 100%;
@@ -666,11 +786,11 @@ body {
     background: #fff;
     color: #000;
 }
- 
+
 .profile-menu button:hover {
     background: #f5f5f5;
 }
- 
+
 /* ---- Add-your-own exercise ---- */
 .add-exercise-row {
     width: 100%;
@@ -678,12 +798,12 @@ body {
     justify-content: center;
     margin-bottom: 15px;
 }
- 
+
 .link-btn.small {
     padding: 6px 14px;
     font-size: 0.7rem;
 }
- 
+
 .delete-btn {
     background: none;
     border: none;
@@ -693,14 +813,14 @@ body {
     padding: 0 0 0 8px;
     line-height: 1;
 }
- 
+
 /* ---- Set / rep logging ---- */
 .log-row {
     display: flex;
     gap: 6px;
     margin-top: 8px;
 }
- 
+
 .log-input {
     width: 42px;
     font-size: 0.7rem;
@@ -709,7 +829,7 @@ body {
     border-radius: 6px;
     text-align: center;
 }
- 
+
 .log-btn {
     font-size: 0.65rem;
     padding: 5px 12px;
@@ -718,12 +838,12 @@ body {
     border-radius: 6px;
     white-space: nowrap;
 }
- 
+
 .log-btn:hover {
     background: #00ffcc;
     color: #000;
 }
- 
+
 /* ---- Login / Sign Up overlay ---- */
 .auth-overlay {
     position: fixed;
@@ -739,11 +859,11 @@ body {
     box-sizing: border-box;
     padding: 20px;
 }
- 
+
 .auth-overlay.active {
     display: flex;
 }
- 
+
 .auth-card {
     background: #fff;
     border-radius: 16px;
@@ -754,20 +874,20 @@ body {
     position: relative;
     text-align: center;
 }
- 
+
 .auth-card #auth-close {
     position: absolute;
     top: 15px;
     left: 15px;
 }
- 
+
 .auth-card h2 {
     font-size: 1rem;
     text-transform: uppercase;
     letter-spacing: 1px;
     margin: 10px 0 20px;
 }
- 
+
 .auth-input {
     width: 100%;
     padding: 12px 14px;
@@ -778,7 +898,7 @@ body {
     box-sizing: border-box;
     font-family: inherit;
 }
- 
+
 .auth-submit {
     width: 100%;
     background: #000;
@@ -790,24 +910,24 @@ body {
     border-radius: 8px;
     margin-top: 6px;
 }
- 
+
 .auth-submit:hover {
     background: #00ffcc;
     color: #000;
 }
- 
+
 .auth-submit:disabled {
     opacity: 0.6;
     cursor: default;
 }
- 
+
 .auth-error {
     color: #c00;
     font-size: 0.75rem;
     min-height: 18px;
     margin-top: 2px;
 }
- 
+
 .auth-links {
     display: flex;
     flex-direction: column;
@@ -815,9 +935,8 @@ body {
     margin-top: 18px;
     font-size: 0.75rem;
 }
- 
+
 .auth-links a {
     color: #666;
     text-decoration: underline;
 }
- 

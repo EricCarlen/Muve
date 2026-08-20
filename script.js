@@ -1,13 +1,14 @@
 // ============================================================
 // STATE
 // ============================================================
-let currentCategory = "";  // key into WORKOUTS
+let currentCategory = "";  // key into WORKOUTS, "" if a custom workout is open instead
+let currentCustomWorkoutId = null; // id of the open custom workout, null if a built-in category is open
 let workoutTimer;
 let isPaused = true;
 let currentStep = 0;
 let elapsed = 0;
 let steps = [];             // the active category's steps, used by the timer engine
- 
+
 // ============================================================
 // WORKOUT DATA — single source of truth.
 // Every category is described the same way: a title, an optional
@@ -21,7 +22,7 @@ let steps = [];             // the active category's steps, used by the timer en
 // are reasonable starting estimates — tweak the numbers freely.
 // ============================================================
 const WORKOUTS = {
- 
+
     morning: {
         title: "Morning Mobility & Sweat",
         subtitle: "Flow: x5 each side or x10 per move",
@@ -51,7 +52,38 @@ const WORKOUTS = {
             { cat: "SWEATY", name: "Crawl", duration: 60 }
         ]
     },
- 
+
+    core: {
+        title: "Core",
+        subtitle: "Combined rotation & control — bodyweight",
+        steps: [
+            { cat: "WARM UP", name: "Dynamic Plank → Downward Dog", duration: 60, tip: "Keep it smooth" },
+            { cat: "WARM UP", name: "Cat-Cow", duration: 60 },
+            { cat: "WARM UP", name: "Torso Twists", duration: 60 },
+            { cat: "WARM UP", name: "Standing Side Bends", duration: 60 },
+            { cat: "MAIN WORK", name: "Twisting Planks → Side Plank", duration: 150, tip: "Slow transitions, 2 second hold in side plank, focus on rib-to-pelvis control." },
+            { cat: "MAIN WORK", name: "Rest", duration: 15 },
+            { cat: "MAIN WORK", name: "Russian Twists", duration: 150, tip: "Lean back until core engages; keep chest proud. Exhale with each twist." },
+            { cat: "MAIN WORK", name: "Rest", duration: 15 },
+            { cat: "MAIN WORK", name: "Bicycle Crunches", duration: 120, tip: "Slow elbow-to-knee, pause briefly at contact" },
+            { cat: "MAIN WORK", name: "Rest", duration: 15 },
+            { cat: "MAIN WORK", name: "Twisting Bear Crawl", duration: 120, tip: "Knees low, spine quiet, hips steady, ribs rotate" },
+            { cat: "MAIN WORK", name: "Rest", duration: 15 },
+            { cat: "MAIN WORK", name: "Twisting V-Ups", duration: 120, tip: "Alternate sides each rep, control the lowering phase" },
+            { cat: "MAIN WORK", name: "Rest", duration: 15 },
+            { cat: "MAIN WORK", name: "Side Plank with Hip Dips (L)", duration: 75, tip: "Small range, constant tension." },
+            { cat: "MAIN WORK", name: "Rest", duration: 5 },
+            { cat: "MAIN WORK", name: "Side Plank with Hip Dips (R)", duration: 75, tip: "Small range, constant tension." },
+            { cat: "MAIN WORK", name: "Rest", duration: 15 },
+            { cat: "MAIN WORK", name: "Plank Shoulder Taps + Knee Twists", duration: 120, tip: "Reduce speed if hips sway" },
+            { cat: "MAIN WORK", name: "Rest", duration: 15 },
+            { cat: "MAIN WORK", name: "Twisting Hollow Body Hold", duration: 40, tip: "Small, deliberate rotations only" },
+            { cat: "MAIN WORK", name: "Rest", duration: 20 },
+            { cat: "COOL DOWN", name: "Supine Twists", duration: 90 },
+            { cat: "COOL DOWN", name: "Child's Pose with side stretch", duration: 60 }
+        ]
+    },
+
     "upper body": {
         title: "Upper Body Strength",
         subtitle: "Tense your core and crush those weights",
@@ -69,7 +101,7 @@ const WORKOUTS = {
             { cat: "WARM UP", name: "Rest", duration: 20 },
             { cat: "WARM UP", name: "Turkish Get Up x 3/side", duration: 90, tip: "Comfortable range" },
             { cat: "WARM UP", name: "Rest", duration: 120 },
- 
+
             // BLOCK A x2
             ...buildRounds([
                 { name: "Pull-up to Knee Raise x 5", duration: 60, tip: "Slow elbow-to-knee, pause briefly at contact" },
@@ -83,7 +115,7 @@ const WORKOUTS = {
                 { name: "Y Raise – 40s on 20s off", duration: 40, tip: "Thumbs up, lead with the elbows" },
                 { name: "Rest", duration: 120 }
             ], "BLOCK A", 2),
- 
+
             // BLOCK B x2
             ...buildRounds([
                 { name: "Hand Release Push-up to Downward Dog – 40s", duration: 40, tip: "Full chest to floor, press back with control" },
@@ -95,7 +127,7 @@ const WORKOUTS = {
                 { name: "Bicep Curl x 5", duration: 40, tip: "No swinging, squeeze at the top" },
                 { name: "Rest", duration: 120 }
             ], "BLOCK B", 2),
- 
+
             // COOL DOWN
             { cat: "COOL DOWN", name: "Child's Pose with side stretch", duration: 30 },
             { cat: "COOL DOWN", name: "Rest", duration: 5 },
@@ -112,7 +144,7 @@ const WORKOUTS = {
             { cat: "COOL DOWN", name: "Supine Figure Four Stretch", duration: 30 }
         ]
     },
- 
+
     "lower body": {
         title: "Lower Body",
         subtitle: "Strength is a skill",
@@ -123,7 +155,7 @@ const WORKOUTS = {
             { cat: "WARM UP", name: "M-Drill / Leg Swings", duration: 45 },
             { cat: "WARM UP", name: "Reach and Roll", duration: 45 },
             { cat: "WARM UP", name: "Slender Lateral Drop", duration: 45 },
- 
+
             ...buildRounds([
                 { name: "Goblet Sumo Squats (Heavy)", duration: 45, tip: "Squat & Power Superset — heavy, controlled reps" },
                 { name: "Monster Walks", duration: 45 },
@@ -136,7 +168,7 @@ const WORKOUTS = {
                 { name: "Weighted Single Leg Glute Bridges", duration: 45 },
                 { name: "Rest", duration: 45 }
             ], "MAIN", 3),
- 
+
             { cat: "COOL DOWN", name: "Kneeling Hamstring Stretch", duration: 45 },
             { cat: "COOL DOWN", name: "Hip Flexor Stretch", duration: 45 },
             { cat: "COOL DOWN", name: "Seated Butterfly Stretch", duration: 45 },
@@ -144,7 +176,7 @@ const WORKOUTS = {
             { cat: "COOL DOWN", name: "Child's Pose", duration: 45 }
         ]
     },
- 
+
     "core rotation": {
         title: "Core Rotation",
         subtitle: "15 min",
@@ -168,7 +200,7 @@ const WORKOUTS = {
             { cat: "COOL DOWN", name: "Supine Twists", duration: 120 }
         ]
     },
- 
+
     "core control": {
         title: "Core Control",
         subtitle: "15 min",
@@ -194,7 +226,7 @@ const WORKOUTS = {
             { cat: "COOL DOWN", name: "Child's Pose with side stretch", duration: 60 }
         ]
     },
- 
+
     "mobility side": {
         title: "Mobility",
         subtitle: "Quality full ROM | 2–3 sets",
@@ -207,7 +239,7 @@ const WORKOUTS = {
             { cat: "C", name: "ATG Split Squat x 10 ea", duration: 30 }
         ]
     },
- 
+
     "strength side": {
         title: "Strength",
         subtitle: "Strength is a skill | 2–3 sets",
@@ -220,7 +252,7 @@ const WORKOUTS = {
             { cat: "C", name: "Good Mornings x 8", duration: 40 }
         ]
     },
- 
+
     evening: {
         title: "Evening Calm",
         subtitle: "Long, easy breaths",
@@ -239,7 +271,7 @@ const WORKOUTS = {
         ]
     }
 };
- 
+
 // Helper used above: repeats a block of steps N times, labeling each
 // round distinctly (e.g. "MAIN · ROUND 1") so headers render per round
 // instead of silently merging rounds together under one heading.
@@ -253,7 +285,7 @@ function buildRounds(block, label, rounds) {
     }
     return out;
 }
- 
+
 // ============================================================
 // GREETING & FOOTER CALENDAR
 // ============================================================
@@ -261,41 +293,41 @@ function setGreeting() {
     const hour = new Date().getHours();
     const greetingElement = document.getElementById("greeting");
     let message = "";
- 
+
     if (hour >= 3 && hour < 11) message = "Good Morning! Take a moment to breathe";
     else if (hour >= 11 && hour < 14) message = "Goodonya, reset your breathe";
     else if (hour >= 14 && hour < 18) message = "Marvelous Afternoon, finish work with a breathe";
     else message = "Relax and breathe";
- 
+
     if (greetingElement) greetingElement.innerText = message;
 }
- 
+
 function updateFooterCalendar() {
     const now = new Date();
     const startOfYear = new Date(now.getFullYear(), 0, 1);
- 
+
     const diffInMilliseconds = now - startOfYear;
     const oneDayInMilliseconds = 1000 * 60 * 60 * 24;
     const dayOfYear = Math.floor(diffInMilliseconds / oneDayInMilliseconds) + 1;
- 
+
     const dayOfWeek = startOfYear.getDay() || 7;
     const startOfFirstWeek = new Date(startOfYear);
     startOfFirstWeek.setDate(startOfYear.getDate() - (dayOfWeek - 1));
- 
+
     const weekOfYear = Math.ceil((((now - startOfFirstWeek) / oneDayInMilliseconds) + 1) / 7);
- 
+
     const dayEl = document.getElementById("day-of-year");
     const weekEl = document.getElementById("week-of-year");
- 
+
     if (dayEl) dayEl.innerText = dayOfYear;
     if (weekEl) weekEl.innerText = weekOfYear;
 }
- 
+
 window.addEventListener('DOMContentLoaded', () => {
     setGreeting();
     updateFooterCalendar();
 });
- 
+
 // ============================================================
 // WORKOUT ENGINE — one entry point for every category, in either mode
 // ============================================================
@@ -304,45 +336,75 @@ function formatDuration(totalSeconds) {
     const secs = totalSeconds % 60;
     return mins > 0 ? `${mins}m ${secs < 10 ? '0' + secs : secs}s` : `${secs}s`;
 }
- 
+
 function resetTimerState() {
     clearInterval(workoutTimer);
     currentStep = 0;
     elapsed = 0;
     isPaused = true;
- 
+
     const playBtn = document.getElementById("play-pause-btn");
     if (playBtn) playBtn.innerHTML = "&#9658;";
- 
+
     const progressBar = document.getElementById("progress");
     if (progressBar) progressBar.style.width = "0%";
 }
- 
+
 // The single entry point every category button calls.
 function filterWorkouts(category, btn) {
     const key = category.toLowerCase();
-    const workout = WORKOUTS[key];
-    if (!workout) return;
- 
+    if (!WORKOUTS[key]) return;
+
     currentCategory = key;
+    currentCustomWorkoutId = null;
+    openWorkoutCommon(btn);
+}
+
+// Entry point for opening a user-created workout from the My Workouts grid.
+function openCustomWorkout(id, btn) {
+    const exists = (window.customWorkouts || []).some(w => w.id === id);
+    if (!exists) return;
+
+    currentCategory = "";
+    currentCustomWorkoutId = id;
+    openWorkoutCommon(btn);
+}
+
+function openWorkoutCommon(btn) {
     window.scrollTo(0, 0);
- 
+
     document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
     if (btn) btn.classList.add("active");
- 
+
     const overlay = document.getElementById("workout-overlay");
     overlay.classList.add("active");
     overlay.style.display = "flex";
- 
-    document.getElementById("overlay-title").innerText = workout.title;
+
+    const workout = getActiveWorkout();
+    document.getElementById("overlay-title").innerText = workout ? workout.title : "Workout";
     renderCurrentMode();
 }
- 
-// Combines a workout's built-in steps with any custom exercises the
-// signed-in user has added for this category, so both List and Timed
-// mode automatically include them — same single-source-of-truth pattern
-// as everything else.
+
+// Returns the workout currently open, whether it's one of the built-in
+// WORKOUTS entries or a workout the signed-in user created themselves.
+// Everything downstream (rendering, the timer engine, etc.) only ever
+// talks to this shape, so it doesn't need to know which kind it's dealing with.
+function getActiveWorkout() {
+    if (currentCustomWorkoutId) {
+        const w = (window.customWorkouts || []).find(cw => cw.id === currentCustomWorkoutId);
+        if (!w) return null;
+        return { title: w.title, subtitle: w.subtitle || "", steps: w.steps || [], isCustom: true, id: w.id };
+    }
+    return WORKOUTS[currentCategory] || null;
+}
+
+// Combines a workout's steps with any extras the signed-in user has added:
+// for a built-in category, that's their saved "+ Add My Exercise" entries;
+// a custom workout's own steps already ARE the user's content, so nothing
+// further to merge in.
 function getMergedSteps(workout) {
+    if (workout.isCustom) return workout.steps;
+
     const custom = (window.customExercisesByCategory && window.customExercisesByCategory[currentCategory]) || [];
     const customSteps = custom.map(c => ({
         cat: "MY EXERCISES",
@@ -354,19 +416,19 @@ function getMergedSteps(workout) {
     }));
     return [...workout.steps, ...customSteps];
 }
- 
+
 // Re-renders the currently open workout using whichever mode the
 // List/Timed toggle is set to. Called on open and whenever the toggle
-// changes, and again whenever sign-in state or custom exercises change.
+// changes, and again whenever sign-in state or custom content changes.
 function renderCurrentMode() {
-    const workout = WORKOUTS[currentCategory];
+    const workout = getActiveWorkout();
     if (!workout) return;
- 
+
     const isTimed = document.getElementById("mode-toggle").checked;
     const timerCont = document.querySelector(".timer-container");
     const controls = document.querySelector(".workout-controls");
     const merged = getMergedSteps(workout);
- 
+
     if (isTimed) {
         timerCont.style.display = "flex";
         controls.style.display = "flex";
@@ -380,34 +442,48 @@ function renderCurrentMode() {
         renderListSteps(workout, merged);
     }
 }
- 
+
 function refreshWorkoutView() {
-    if (currentCategory) renderCurrentMode();
+    if (currentCategory || currentCustomWorkoutId) renderCurrentMode();
 }
- 
+
 function renderListSteps(workout, mergedSteps) {
     const content = document.getElementById("overlay-content");
     const signedIn = window.isSignedIn && window.isSignedIn();
- 
+    const isCustomWorkout = !!workout.isCustom;
+
     let html = `<div class="set-counter">${workout.subtitle || ""}</div>`;
+
+    const addLabel = isCustomWorkout ? "+ Add Exercise" : "+ Add My Exercise";
+    const addHandler = isCustomWorkout
+        ? `openAddStepToCustomWorkout('${workout.id}')`
+        : `openAddExerciseForm('${currentCategory}')`;
     html += `<div class="add-exercise-row">
-                <button class="link-btn small" onclick="openAddExerciseForm('${currentCategory}')">+ Add My Exercise</button>
+                <button class="link-btn small" onclick="${addHandler}">${addLabel}</button>
              </div>`;
+
+    if (isCustomWorkout && mergedSteps.length === 0) {
+        html += `<p style="color:#888; font-size:0.8rem; padding: 10px 0 20px;">No exercises yet — tap "+ Add Exercise" to build this workout.</p>`;
+    }
+
     html += `<div class="workout-list">`;
     let lastCat = "";
- 
+
     mergedSteps.forEach(step => {
         if (step.name === "Rest") return; // checklist mode doesn't need rest timing
- 
+
         if (step.cat !== lastCat) {
             html += `<h3 class="workout-section-title">${step.cat}</h3>`;
             lastCat = step.cat;
         }
- 
+
         const tipHtml = step.tip ? `<div class="tech-note"><strong>Tip:</strong> ${step.tip}</div>` : "";
-        const deleteHtml = step.custom
-            ? `<button class="delete-btn" onclick="deleteCustomExercise('${step.id}')" title="Remove">&times;</button>`
-            : "";
+        let deleteHtml = "";
+        if (isCustomWorkout && step.id) {
+            deleteHtml = `<button class="delete-btn" onclick="deleteStepFromWorkout('${workout.id}', '${step.id}')" title="Remove">&times;</button>`;
+        } else if (step.custom) {
+            deleteHtml = `<button class="delete-btn" onclick="deleteCustomExercise('${step.id}')" title="Remove">&times;</button>`;
+        }
         const slug = slugify(step.name);
         const logHtml = signedIn ? `
             <div class="log-row">
@@ -416,7 +492,7 @@ function renderListSteps(workout, mergedSteps) {
                 <input type="number" min="0" placeholder="Wt" class="log-input" id="weight-${slug}">
                 <button class="log-btn" onclick="saveLog('${escapeForAttr(step.name)}')">Log</button>
             </div>` : "";
- 
+
         html += `<div class="exercise-item list">
                     <div class="exercise-info-wrapper">
                         <span class="step-name">${step.name}${deleteHtml}</span>
@@ -426,26 +502,30 @@ function renderListSteps(workout, mergedSteps) {
                     <span class="step-time">${formatDuration(step.duration)}</span>
                  </div>`;
     });
- 
+
     html += `</div>`;
     html += nextWorkoutButton(workout);
     content.innerHTML = html;
 }
- 
+
 function slugify(name) {
     return name.replace(/[^a-z0-9]/gi, "").toLowerCase();
 }
- 
+
 function escapeForAttr(str) {
     return str.replace(/'/g, "\\'");
 }
- 
+
+function generateStepId() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
 // ============================================================
 // CUSTOM EXERCISES & SET/REP LOGGING (UI side — Firebase calls live in auth.js)
 // ============================================================
 function openAddExerciseForm(category) {
     if (!window.isSignedIn || !window.isSignedIn()) {
-        alert("Sign in with Google first, then you can add your own exercises here.");
+        alert("Sign in first, then you can add your own exercises here.");
         return;
     }
     const name = prompt("Exercise name:");
@@ -454,20 +534,41 @@ function openAddExerciseForm(category) {
     const tip = prompt("Optional form tip (leave blank if none):", "") || "";
     window.addCustomExercise(category, name, duration, tip);
 }
- 
+
+// Adds an exercise directly into one of the user's own custom workouts.
+async function openAddStepToCustomWorkout(workoutId) {
+    if (!window.isSignedIn || !window.isSignedIn()) {
+        alert("Sign in first to build your own workout.");
+        return;
+    }
+    const name = prompt("Exercise name:");
+    if (!name) return;
+    const duration = prompt("Duration in seconds (used for Timed mode, e.g. 45):", "45");
+    const tip = prompt("Optional form tip (leave blank if none):", "") || "";
+
+    const step = { id: generateStepId(), cat: "EXERCISES", name, duration: Number(duration) || 40, tip };
+    await window.addStepToCustomWorkout(workoutId, step);
+    renderCurrentMode();
+}
+
+async function deleteStepFromWorkout(workoutId, stepId) {
+    await window.removeStepFromCustomWorkout(workoutId, stepId);
+    renderCurrentMode();
+}
+
 function saveLog(exerciseName) {
     const slug = slugify(exerciseName);
     const sets = document.getElementById(`sets-${slug}`).value;
     const reps = document.getElementById(`reps-${slug}`).value;
     const weight = document.getElementById(`weight-${slug}`).value;
- 
+
     if (!sets && !reps) {
         alert("Enter at least sets or reps before logging.");
         return;
     }
- 
+
     window.logSetEntry(currentCategory, exerciseName, sets, reps, weight);
- 
+
     const btn = event && event.target;
     if (btn) {
         const original = btn.innerText;
@@ -475,12 +576,12 @@ function saveLog(exerciseName) {
         setTimeout(() => { btn.innerText = original; }, 1200);
     }
 }
- 
+
 // ============================================================
 // LOGIN / SIGN UP FORM
 // ============================================================
 let authMode = "signin"; // "signin" | "signup"
- 
+
 function openAuthForm() {
     authMode = "signin";
     updateAuthFormLabels();
@@ -489,16 +590,16 @@ function openAuthForm() {
     document.getElementById("auth-error").innerText = "";
     document.getElementById("auth-overlay").classList.add("active");
 }
- 
+
 function closeAuthForm() {
     document.getElementById("auth-overlay").classList.remove("active");
 }
- 
+
 function toggleAuthMode() {
     authMode = authMode === "signin" ? "signup" : "signin";
     updateAuthFormLabels();
 }
- 
+
 function updateAuthFormLabels() {
     const isSignUp = authMode === "signup";
     document.getElementById("auth-title").innerText = isSignUp ? "Create Account" : "Sign In";
@@ -508,36 +609,36 @@ function updateAuthFormLabels() {
         : "Need an account? Sign Up";
     document.getElementById("auth-error").innerText = "";
 }
- 
+
 async function submitAuthForm() {
     const email = document.getElementById("auth-email").value.trim();
     const password = document.getElementById("auth-password").value;
     const errorEl = document.getElementById("auth-error");
     errorEl.innerText = "";
- 
+
     if (!email || !password) {
         errorEl.innerText = "Enter both an email and a password.";
         return;
     }
- 
+
     const submitBtn = document.getElementById("auth-submit");
     submitBtn.disabled = true;
     submitBtn.innerText = "Please wait…";
- 
+
     const result = authMode === "signup"
         ? await window.signUpWithEmail(email, password)
         : await window.signInWithEmail(email, password);
- 
+
     submitBtn.disabled = false;
     updateAuthFormLabels();
- 
+
     if (result.ok) {
         closeAuthForm();
     } else {
         errorEl.innerText = result.message;
     }
 }
- 
+
 async function handleForgotPassword() {
     const email = document.getElementById("auth-email").value.trim();
     const errorEl = document.getElementById("auth-error");
@@ -550,22 +651,91 @@ async function handleForgotPassword() {
         ? "Password reset email sent — check your inbox."
         : result.message;
 }
- 
- 
+
+
 function toggleProfileMenu() {
     document.getElementById("profile-btn").classList.toggle("open");
 }
- 
+
+// ============================================================
+// MY WORKOUTS — the full built-in library plus anything the
+// signed-in user has created themselves.
+// ============================================================
+const FULL_WORKOUT_LIST = [
+    "morning", "upper body", "lower body",
+    "core rotation", "core control",
+    "mobility side", "strength side", "evening"
+];
+
+// Called from auth.js whenever sign-in state or custom workouts change.
+function renderMyWorkoutsSection() {
+    const section = document.getElementById("my-workouts-section");
+    const prompt = document.getElementById("signin-prompt");
+    if (!section) return;
+
+    const signedIn = window.isSignedIn && window.isSignedIn();
+
+    if (!signedIn) {
+        section.style.display = "none";
+        if (prompt) prompt.style.display = "block";
+        return;
+    }
+    if (prompt) prompt.style.display = "none";
+    section.style.display = "flex";
+
+    const grid = document.getElementById("my-workouts-grid");
+    let html = "";
+
+    FULL_WORKOUT_LIST.forEach(key => {
+        html += `<button class="filter-btn my-workout-btn" onclick="filterWorkouts('${key}', this)">
+                    <span>${WORKOUTS[key].title}</span>
+                 </button>`;
+    });
+
+    (window.customWorkouts || []).forEach(w => {
+        html += `<button class="filter-btn my-workout-btn custom" onclick="openCustomWorkout('${w.id}', this)">
+                    <span>${w.title}</span>
+                    <span class="delete-workout-btn" onclick="event.stopPropagation(); deleteWorkout('${w.id}')" title="Delete workout">&times;</span>
+                 </button>`;
+    });
+
+    html += `<button class="filter-btn my-workout-btn create-btn" onclick="createWorkoutFlow()">
+                <span>+ Create Workout</span>
+             </button>`;
+
+    grid.innerHTML = html;
+}
+
+async function createWorkoutFlow() {
+    if (!window.isSignedIn || !window.isSignedIn()) {
+        alert("Sign in first to create your own workout.");
+        return;
+    }
+    const name = prompt("Name your workout:");
+    if (!name) return;
+    const id = await window.createCustomWorkout(name);
+    renderMyWorkoutsSection();
+    if (id) openCustomWorkout(id);
+}
+
+async function deleteWorkout(workoutId) {
+    if (!confirm("Delete this workout? This can't be undone.")) return;
+    await window.deleteCustomWorkout(workoutId);
+    renderMyWorkoutsSection();
+    if (currentCustomWorkoutId === workoutId) closeWorkout();
+}
+
 async function openHistory() {
     if (!window.isSignedIn || !window.isSignedIn()) {
         alert("Sign in to see your logged sets & reps.");
         return;
     }
     document.getElementById("profile-btn").classList.remove("open");
- 
+
     currentCategory = "";
+    currentCustomWorkoutId = null;
     document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
- 
+
     const overlay = document.getElementById("workout-overlay");
     overlay.classList.add("active");
     overlay.style.display = "flex";
@@ -573,7 +743,7 @@ async function openHistory() {
     document.querySelector(".workout-controls").style.display = "none";
     document.getElementById("overlay-title").innerText = "My Log History";
     document.getElementById("overlay-content").innerHTML = `<p style="padding:40px 0; color:#888;">Loading…</p>`;
- 
+
     const logs = await window.getRecentLogs();
     let html = `<div class="workout-list">`;
     if (!logs.length) {
@@ -592,28 +762,28 @@ async function openHistory() {
     html += `</div>`;
     document.getElementById("overlay-content").innerHTML = html;
 }
- 
+
 function renderTimedSteps() {
     const content = document.getElementById("overlay-content");
-    const workout = WORKOUTS[currentCategory];
+    const workout = getActiveWorkout();
     let html = `<div class="set-counter">${workout.subtitle || ""}</div><div class="workout-list">`;
     let lastCat = "";
- 
+
     steps.forEach((step, index) => {
         if (step.name === "Rest" && index < currentStep) return;
- 
+
         if (step.cat !== lastCat) {
             html += `<h3 class="workout-section-title">${step.cat}</h3>`;
             lastCat = step.cat;
         }
- 
+
         let status = index === currentStep ? "active" : (index < currentStep ? "completed" : "");
         if (step.name === "Rest") status += " rest";
- 
+
         const techNote = (step.tip && index === currentStep)
             ? `<div class="tech-note"><strong>Tip:</strong> ${step.tip}</div>`
             : "";
- 
+
         html += `<div class="exercise-item ${status}">
                     <div class="exercise-info-wrapper">
                         <span class="step-name">${step.name}</span>
@@ -622,10 +792,10 @@ function renderTimedSteps() {
                     <span class="step-time">${formatDuration(step.duration)}</span>
                  </div>`;
     });
- 
+
     html += `</div>`;
     content.innerHTML = html;
- 
+
     const tipElement = document.getElementById("active-tip");
     if (tipElement && steps[currentStep]) {
         if (steps[currentStep].name === "Rest") {
@@ -635,7 +805,7 @@ function renderTimedSteps() {
         }
     }
 }
- 
+
 function nextWorkoutButton(workout) {
     if (!workout.next || !WORKOUTS[workout.next]) return "";
     return `<div class="workout-link-container">
@@ -644,26 +814,27 @@ function nextWorkoutButton(workout) {
                 </button>
             </div>`;
 }
- 
+
 function closeWorkout() {
     const overlay = document.getElementById("workout-overlay");
     overlay.classList.remove("active");
     overlay.style.display = "none";
- 
+
     const profileChip = document.getElementById("profile-btn");
     if (profileChip) profileChip.classList.remove("open");
- 
+
     resetTimerState();
     document.querySelector(".timer-container").style.display = "none";
     document.querySelector(".workout-controls").style.display = "none";
     document.getElementById("overlay-content").innerHTML = "";
     document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
- 
+
     currentCategory = "";
+    currentCustomWorkoutId = null;
     // Note: the List/Timed toggle is left as-is on purpose, so your
     // preferred mode carries over to the next workout you open.
 }
- 
+
 // ============================================================
 // TIMER CONTROLS
 // ============================================================
@@ -679,16 +850,16 @@ function togglePlayPause() {
         clearInterval(workoutTimer);
     }
 }
- 
+
 function startTicker() {
     clearInterval(workoutTimer);
     workoutTimer = setInterval(() => {
         elapsed++;
- 
+
         const totalTime = steps.reduce((acc, s) => acc + s.duration, 0);
         const progressBar = document.getElementById("progress");
         if (progressBar) progressBar.style.width = (elapsed / totalTime) * 100 + "%";
- 
+
         const countdownEl = document.getElementById("timer-countdown");
         if (countdownEl) {
             const timeAtEndOfCurrentStep = steps.slice(0, currentStep + 1).reduce((acc, s) => acc + s.duration, 0);
@@ -697,22 +868,22 @@ function startTicker() {
             const s = secondsLeftInStep % 60;
             countdownEl.innerText = `${m}:${s < 10 ? '0' + s : s}`;
         }
- 
+
         const timePassedForSteps = steps.slice(0, currentStep + 1).reduce((acc, s) => acc + s.duration, 0);
         if (elapsed >= timePassedForSteps) goToNextStep();
     }, 1000);
 }
- 
+
 function skipStep() {
     elapsed = steps.slice(0, currentStep + 1).reduce((acc, s) => acc + s.duration, 0);
     goToNextStep();
 }
- 
+
 function goToNextStep() {
     currentStep++;
     if (currentStep >= steps.length) {
         clearInterval(workoutTimer);
-        const workout = WORKOUTS[currentCategory];
+        const workout = getActiveWorkout();
         document.getElementById("overlay-content").innerHTML = `
             <div style="text-align:center; padding: 50px;">
                 <h2>Workout Complete!</h2>
@@ -725,4 +896,3 @@ function goToNextStep() {
         renderTimedSteps();
     }
 }
- 
