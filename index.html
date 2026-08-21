@@ -51,7 +51,11 @@
     <p id="signin-prompt" class="signin-prompt">Sign in to unlock the full workout library and build your own.</p>
 
     <div id="my-workouts-section" class="my-workouts-section" style="display:none;">
-        <h2 class="section-title">My Workouts</h2>
+        <div class="my-workouts-header">
+            <h2 class="section-title">My Workouts</h2>
+            <button class="link-btn small" onclick="openManageWorkouts()">Manage</button>
+        </div>
+        <div id="workout-tag-filter" class="tag-filter-bar" style="display:none;"></div>
         <div class="category-grid" id="my-workouts-grid"></div>
     </div>
 
@@ -134,6 +138,30 @@
                     <a href="#" onclick="handleForgotPassword(); return false;">Forgot password?</a>
                 </div>
             </div>
+        </div>
+
+        <!-- WORKOUT BUILDER OVERLAY -->
+        <div id="builder-overlay" class="overlay">
+            <div class="workout-header">
+                <div class="header-left">
+                    <button class="close-btn" onclick="closeBuilder()">&#8592;</button>
+                </div>
+                <h1 id="builder-title">Workout Builder</h1>
+                <div class="header-right"></div>
+            </div>
+            <div id="builder-content" class="builder-content"></div>
+        </div>
+
+        <!-- MANAGE MY WORKOUTS OVERLAY -->
+        <div id="manage-overlay" class="overlay">
+            <div class="workout-header">
+                <div class="header-left">
+                    <button class="close-btn" onclick="closeManageWorkouts()">&#8592;</button>
+                </div>
+                <h1>Manage My Workouts</h1>
+                <div class="header-right"></div>
+            </div>
+            <div id="manage-content" class="builder-content"></div>
         </div>
 
         <div class="footer-right">

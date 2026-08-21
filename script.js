@@ -9,6 +9,10 @@ let currentStep = 0;
 let elapsed = 0;
 let steps = [];             // the active category's steps, used by the timer engine
 
+let builderState = null;    // the workout currently being created/edited in the builder
+let dragFromIndex = null;   // index of the builder row currently being dragged
+let activeTagFilter = "all"; // which tag is currently filtering the My Workouts grid
+
 // ============================================================
 // WORKOUT DATA — single source of truth.
 // Every category is described the same way: a title, an optional
@@ -286,6 +290,70 @@ function buildRounds(block, label, rounds) {
     return out;
 }
 
+// List mode shows reps instead of time where an exercise naturally has a
+// rep count (e.g. "x 10", "x5-8", "x3-4/side") — most exercise names
+// already carry that in the text, so we pull it out automatically rather
+// than re-typing it for every exercise. Anything without a rep count
+// (planks, holds, cardio bursts, stretches) has no natural "reps" value,
+// so List mode falls back to showing its duration for those instead.
+const REPS_PATTERN = /x\s?\d+(?:\s?[-–]\s?\d+)?(?:\s?\/\s?\w+)?/i;
+
+function extractReps(name) {
+    const match = name.match(REPS_PATTERN);
+    return match ? match[0].replace(/\s+/g, "") : null;
+}
+
+Object.values(WORKOUTS).forEach(workout => {
+    workout.steps.forEach(step => {
+        if (step.name === "Rest" || step.reps) return;
+        const found = extractReps(step.name);
+        if (found) step.reps = found;
+    });
+});
+
+// ============================================================
+// PASTE-LIST PARSER
+// Turns a block of pasted text — one exercise per line, in whatever
+// format someone already had it written — into individual exercise
+// objects the builder can work with. Recognises an explicit rep count
+// ("x10", "x5-8", "x3/side") or a time ("45s", "1m 30s", "2 min") if
+// either is present in the line; otherwise defaults to a 40s timed
+// entry that's still fully editable afterward.
+// ============================================================
+const TIME_PATTERN = /(\d+)\s*m(?:in(?:ute)?s?)?\s*(\d+)?\s*s?(?:ec(?:ond)?s?)?\b|(\d+)\s*s(?:ec(?:ond)?s?)?\b/i;
+const LIST_MARKER_PATTERN = /^\s*(?:\d+[.)]|[-*•])\s*/;
+
+function parseExerciseLines(text) {
+    return text.split("\n")
+        .map(line => line.trim())
+        .filter(Boolean)
+        .map(parseSingleExerciseLine);
+}
+
+function parseSingleExerciseLine(line) {
+    const clean = line.replace(LIST_MARKER_PATTERN, "").trim();
+
+    const repsMatch = clean.match(REPS_PATTERN);
+    if (repsMatch) {
+        const reps = repsMatch[0].replace(/\s+/g, "");
+        const name = clean.replace(repsMatch[0], "").replace(/[-–,]\s*$/, "").trim();
+        return { id: generateStepId(), cat: "EXERCISES", name: name || clean, mode: "reps", reps, duration: 40, tip: "", restOverride: null };
+    }
+
+    const timeMatch = clean.match(TIME_PATTERN);
+    if (timeMatch) {
+        const seconds = timeMatch[1]
+            ? parseInt(timeMatch[1], 10) * 60 + (timeMatch[2] ? parseInt(timeMatch[2], 10) : 0)
+            : parseInt(timeMatch[3], 10);
+        const name = clean.replace(timeMatch[0], "").replace(/[-–,]\s*$/, "").trim();
+        return { id: generateStepId(), cat: "EXERCISES", name: name || clean, mode: "time", reps: "", duration: seconds, tip: "", restOverride: null };
+    }
+
+    // No recognisable count in the line — default to a 40s timed entry;
+    // easy to switch to Reps and fix up afterward if that's wrong.
+    return { id: generateStepId(), cat: "EXERCISES", name: clean, mode: "time", reps: "", duration: 40, tip: "", restOverride: null };
+}
+
 // ============================================================
 // GREETING & FOOTER CALENDAR
 // ============================================================
@@ -393,7 +461,15 @@ function getActiveWorkout() {
     if (currentCustomWorkoutId) {
         const w = (window.customWorkouts || []).find(cw => cw.id === currentCustomWorkoutId);
         if (!w) return null;
-        return { title: w.title, subtitle: w.subtitle || "", steps: w.steps || [], isCustom: true, id: w.id };
+        return {
+            title: w.title,
+            subtitle: w.subtitle || "",
+            steps: w.steps || [],
+            tags: w.tags || [],
+            defaultRest: w.defaultRest != null ? w.defaultRest : 15,
+            isCustom: true,
+            id: w.id
+        };
     }
     return WORKOUTS[currentCategory] || null;
 }
@@ -411,10 +487,39 @@ function getMergedSteps(workout) {
         name: c.name,
         duration: c.duration || 40,
         tip: c.tip,
+        reps: c.reps || "",
         id: c.id,
         custom: true
     }));
     return [...workout.steps, ...customSteps];
+}
+
+// Custom workouts don't store explicit "Rest" entries — the workout's
+// defaultRest (set once in the builder) is inserted automatically between
+// every pair of exercises when Timed mode actually needs the countdown.
+// A per-exercise restOverride (also set in the builder) takes priority
+// over the default when present, including an override of 0 for "no rest
+// after this one." Built-in categories already have their rests baked
+// into WORKOUTS, so they pass through unchanged.
+function expandWithDefaultRest(workout, mergedSteps) {
+    if (!workout.isCustom) return mergedSteps;
+
+    const defaultRest = workout.defaultRest != null ? workout.defaultRest : 15;
+    const expanded = [];
+
+    mergedSteps.forEach((step, i) => {
+        expanded.push(step);
+        const isLast = i === mergedSteps.length - 1;
+        if (isLast) return;
+
+        const hasOverride = step.restOverride !== null && step.restOverride !== undefined && step.restOverride !== "";
+        const restDuration = hasOverride ? Number(step.restOverride) : defaultRest;
+        if (restDuration > 0) {
+            expanded.push({ cat: step.cat, name: "Rest", duration: restDuration });
+        }
+    });
+
+    return expanded;
 }
 
 // Re-renders the currently open workout using whichever mode the
@@ -432,7 +537,7 @@ function renderCurrentMode() {
     if (isTimed) {
         timerCont.style.display = "flex";
         controls.style.display = "flex";
-        steps = merged;
+        steps = expandWithDefaultRest(workout, merged);
         resetTimerState();
         renderTimedSteps();
     } else {
@@ -454,16 +559,17 @@ function renderListSteps(workout, mergedSteps) {
 
     let html = `<div class="set-counter">${workout.subtitle || ""}</div>`;
 
-    const addLabel = isCustomWorkout ? "+ Add Exercise" : "+ Add My Exercise";
-    const addHandler = isCustomWorkout
-        ? `openAddStepToCustomWorkout('${workout.id}')`
-        : `openAddExerciseForm('${currentCategory}')`;
-    html += `<div class="add-exercise-row">
-                <button class="link-btn small" onclick="${addHandler}">${addLabel}</button>
-             </div>`;
-
-    if (isCustomWorkout && mergedSteps.length === 0) {
-        html += `<p style="color:#888; font-size:0.8rem; padding: 10px 0 20px;">No exercises yet — tap "+ Add Exercise" to build this workout.</p>`;
+    if (isCustomWorkout) {
+        html += `<div class="add-exercise-row">
+                    <button class="link-btn small" onclick="openEditWorkoutBuilder('${workout.id}')">&#9998; Edit Workout</button>
+                 </div>`;
+        if (mergedSteps.length === 0) {
+            html += `<p style="color:#888; font-size:0.8rem; padding: 10px 0 20px;">No exercises yet — tap "Edit Workout" to build it.</p>`;
+        }
+    } else {
+        html += `<div class="add-exercise-row">
+                    <button class="link-btn small" onclick="openAddExerciseForm('${currentCategory}')">+ Add My Exercise</button>
+                 </div>`;
     }
 
     html += `<div class="workout-list">`;
@@ -478,12 +584,9 @@ function renderListSteps(workout, mergedSteps) {
         }
 
         const tipHtml = step.tip ? `<div class="tech-note"><strong>Tip:</strong> ${step.tip}</div>` : "";
-        let deleteHtml = "";
-        if (isCustomWorkout && step.id) {
-            deleteHtml = `<button class="delete-btn" onclick="deleteStepFromWorkout('${workout.id}', '${step.id}')" title="Remove">&times;</button>`;
-        } else if (step.custom) {
-            deleteHtml = `<button class="delete-btn" onclick="deleteCustomExercise('${step.id}')" title="Remove">&times;</button>`;
-        }
+        const deleteHtml = (!isCustomWorkout && step.custom)
+            ? `<button class="delete-btn" onclick="deleteCustomExercise('${step.id}')" title="Remove">&times;</button>`
+            : "";
         const slug = slugify(step.name);
         const logHtml = signedIn ? `
             <div class="log-row">
@@ -499,7 +602,7 @@ function renderListSteps(workout, mergedSteps) {
                         ${tipHtml}
                         ${logHtml}
                     </div>
-                    <span class="step-time">${formatDuration(step.duration)}</span>
+                    <span class="step-time">${step.reps || formatDuration(step.duration)}</span>
                  </div>`;
     });
 
@@ -531,29 +634,9 @@ function openAddExerciseForm(category) {
     const name = prompt("Exercise name:");
     if (!name) return;
     const duration = prompt("Duration in seconds (used for Timed mode, e.g. 45):", "45");
+    const reps = prompt("Reps to show in List mode (e.g. \"x10\") — leave blank to show the time instead:", "") || "";
     const tip = prompt("Optional form tip (leave blank if none):", "") || "";
-    window.addCustomExercise(category, name, duration, tip);
-}
-
-// Adds an exercise directly into one of the user's own custom workouts.
-async function openAddStepToCustomWorkout(workoutId) {
-    if (!window.isSignedIn || !window.isSignedIn()) {
-        alert("Sign in first to build your own workout.");
-        return;
-    }
-    const name = prompt("Exercise name:");
-    if (!name) return;
-    const duration = prompt("Duration in seconds (used for Timed mode, e.g. 45):", "45");
-    const tip = prompt("Optional form tip (leave blank if none):", "") || "";
-
-    const step = { id: generateStepId(), cat: "EXERCISES", name, duration: Number(duration) || 40, tip };
-    await window.addStepToCustomWorkout(workoutId, step);
-    renderCurrentMode();
-}
-
-async function deleteStepFromWorkout(workoutId, stepId) {
-    await window.removeStepFromCustomWorkout(workoutId, stepId);
-    renderCurrentMode();
+    window.addCustomExercise(category, name, duration, tip, reps);
 }
 
 function saveLog(exerciseName) {
@@ -670,52 +753,85 @@ const FULL_WORKOUT_LIST = [
 // Called from auth.js whenever sign-in state or custom workouts change.
 function renderMyWorkoutsSection() {
     const section = document.getElementById("my-workouts-section");
-    const prompt = document.getElementById("signin-prompt");
+    const promptEl = document.getElementById("signin-prompt");
     if (!section) return;
 
     const signedIn = window.isSignedIn && window.isSignedIn();
 
     if (!signedIn) {
         section.style.display = "none";
-        if (prompt) prompt.style.display = "block";
+        if (promptEl) promptEl.style.display = "block";
         return;
     }
-    if (prompt) prompt.style.display = "none";
+    if (promptEl) promptEl.style.display = "none";
     section.style.display = "flex";
+
+    // A null visibleWorkouts setting means "show everything" (the default,
+    // before anyone has used Manage to hide something).
+    const settings = window.userSettings || {};
+    const visibleSet = Array.isArray(settings.visibleWorkouts) ? new Set(settings.visibleWorkouts) : null;
+
+    const allCustom = window.customWorkouts || [];
+    const visibleBuiltins = FULL_WORKOUT_LIST.filter(key => !visibleSet || visibleSet.has(key));
+    const visibleCustom = allCustom.filter(w => !visibleSet || visibleSet.has(w.id));
+
+    renderTagFilterBar(visibleCustom);
+
+    const showBuiltins = activeTagFilter === "all";
+    const filteredCustom = activeTagFilter === "all"
+        ? visibleCustom
+        : visibleCustom.filter(w => (w.tags || []).includes(activeTagFilter));
 
     const grid = document.getElementById("my-workouts-grid");
     let html = "";
 
-    FULL_WORKOUT_LIST.forEach(key => {
-        html += `<button class="filter-btn my-workout-btn" onclick="filterWorkouts('${key}', this)">
-                    <span>${WORKOUTS[key].title}</span>
-                 </button>`;
-    });
+    if (showBuiltins) {
+        visibleBuiltins.forEach(key => {
+            html += `<button class="filter-btn my-workout-btn" onclick="filterWorkouts('${key}', this)">
+                        <span>${WORKOUTS[key].title}</span>
+                     </button>`;
+        });
+    }
 
-    (window.customWorkouts || []).forEach(w => {
+    filteredCustom.forEach(w => {
         html += `<button class="filter-btn my-workout-btn custom" onclick="openCustomWorkout('${w.id}', this)">
                     <span>${w.title}</span>
-                    <span class="delete-workout-btn" onclick="event.stopPropagation(); deleteWorkout('${w.id}')" title="Delete workout">&times;</span>
+                    <span class="workout-btn-icons">
+                        <span class="edit-workout-btn" onclick="event.stopPropagation(); openEditWorkoutBuilder('${w.id}')" title="Edit">&#9998;</span>
+                        <span class="delete-workout-btn" onclick="event.stopPropagation(); deleteWorkout('${w.id}')" title="Delete">&times;</span>
+                    </span>
                  </button>`;
     });
 
-    html += `<button class="filter-btn my-workout-btn create-btn" onclick="createWorkoutFlow()">
+    html += `<button class="filter-btn my-workout-btn create-btn" onclick="openCreateWorkoutBuilder()">
                 <span>+ Create Workout</span>
              </button>`;
 
     grid.innerHTML = html;
 }
 
-async function createWorkoutFlow() {
-    if (!window.isSignedIn || !window.isSignedIn()) {
-        alert("Sign in first to create your own workout.");
+function renderTagFilterBar(visibleCustomWorkouts) {
+    const bar = document.getElementById("workout-tag-filter");
+    if (!bar) return;
+
+    const allTags = [...new Set(visibleCustomWorkouts.flatMap(w => w.tags || []))];
+    if (allTags.length === 0) {
+        bar.style.display = "none";
+        bar.innerHTML = "";
         return;
     }
-    const name = prompt("Name your workout:");
-    if (!name) return;
-    const id = await window.createCustomWorkout(name);
+
+    bar.style.display = "flex";
+    let html = `<button class="tag-filter-chip ${activeTagFilter === "all" ? "active" : ""}" onclick="setTagFilter('all')">All</button>`;
+    allTags.forEach(tag => {
+        html += `<button class="tag-filter-chip ${activeTagFilter === tag ? "active" : ""}" onclick="setTagFilter('${escapeForAttr(tag)}')">${tag}</button>`;
+    });
+    bar.innerHTML = html;
+}
+
+function setTagFilter(tag) {
+    activeTagFilter = tag;
     renderMyWorkoutsSection();
-    if (id) openCustomWorkout(id);
 }
 
 async function deleteWorkout(workoutId) {
@@ -723,6 +839,287 @@ async function deleteWorkout(workoutId) {
     await window.deleteCustomWorkout(workoutId);
     renderMyWorkoutsSection();
     if (currentCustomWorkoutId === workoutId) closeWorkout();
+}
+
+// ============================================================
+// MANAGE MY WORKOUTS — choose which built-in and custom workouts
+// appear on the My Workouts screen.
+// ============================================================
+function openManageWorkouts() {
+    if (!window.isSignedIn || !window.isSignedIn()) {
+        alert("Sign in first.");
+        return;
+    }
+    const settings = window.userSettings || {};
+    const visibleSet = Array.isArray(settings.visibleWorkouts) ? new Set(settings.visibleWorkouts) : null;
+
+    let html = `<p style="color:#888; font-size:0.8rem; margin-bottom:15px;">Choose which workouts show up on your My Workouts screen.</p>`;
+    html += `<div class="manage-list">`;
+    FULL_WORKOUT_LIST.forEach(key => {
+        html += manageRow(key, WORKOUTS[key].title, !visibleSet || visibleSet.has(key));
+    });
+    (window.customWorkouts || []).forEach(w => {
+        html += manageRow(w.id, w.title, !visibleSet || visibleSet.has(w.id));
+    });
+    html += `</div>`;
+    html += `<div class="builder-actions"><button class="auth-submit" onclick="saveManageWorkouts()">Save</button></div>`;
+
+    document.getElementById("manage-content").innerHTML = html;
+    const overlay = document.getElementById("manage-overlay");
+    overlay.classList.add("active");
+    overlay.style.display = "flex";
+}
+
+function manageRow(key, title, checked) {
+    return `<label class="manage-row">
+                <input type="checkbox" data-key="${escapeForAttr(key)}" ${checked ? "checked" : ""}>
+                <span>${title}</span>
+            </label>`;
+}
+
+function closeManageWorkouts() {
+    document.getElementById("manage-overlay").classList.remove("active");
+    document.getElementById("manage-overlay").style.display = "none";
+}
+
+async function saveManageWorkouts() {
+    const checkboxes = document.querySelectorAll("#manage-content input[type=checkbox]");
+    const visible = [];
+    checkboxes.forEach(cb => { if (cb.checked) visible.push(cb.getAttribute("data-key")); });
+    await window.saveVisibleWorkouts(visible);
+    closeManageWorkouts();
+    renderMyWorkoutsSection();
+}
+
+// ============================================================
+// WORKOUT BUILDER — create or edit a custom workout: paste a list,
+// add/edit exercises inline, reorder them, tag the workout, and set
+// a default rest period. Everything is edited in memory and written
+// to Firestore in one go when Save is clicked.
+// ============================================================
+function openCreateWorkoutBuilder() {
+    if (!window.isSignedIn || !window.isSignedIn()) {
+        alert("Sign in first to create your own workout.");
+        return;
+    }
+    builderState = { id: null, title: "", subtitle: "Your custom workout", tags: [], defaultRest: 15, steps: [] };
+    openBuilderOverlay("Create Workout");
+}
+
+function openEditWorkoutBuilder(workoutId) {
+    const w = (window.customWorkouts || []).find(cw => cw.id === workoutId);
+    if (!w) return;
+
+    closeWorkout(); // in case it was open in the run-view underneath
+
+    builderState = {
+        id: w.id,
+        title: w.title,
+        subtitle: w.subtitle || "Your custom workout",
+        tags: [...(w.tags || [])],
+        defaultRest: w.defaultRest != null ? w.defaultRest : 15,
+        steps: (w.steps || []).map(s => ({ ...s, mode: s.mode || (s.reps ? "reps" : "time") }))
+    };
+    openBuilderOverlay("Edit Workout");
+}
+
+function openBuilderOverlay(title) {
+    document.getElementById("builder-title").innerText = title;
+    const overlay = document.getElementById("builder-overlay");
+    overlay.classList.add("active");
+    overlay.style.display = "flex";
+    renderBuilder();
+}
+
+function closeBuilder() {
+    document.getElementById("builder-overlay").classList.remove("active");
+    document.getElementById("builder-overlay").style.display = "none";
+    builderState = null;
+}
+
+function renderBuilder() {
+    const content = document.getElementById("builder-content");
+    const s = builderState;
+
+    const tagsHtml = s.tags.map(t =>
+        `<span class="tag-chip">${t} <button onclick="removeTagFromBuilder('${escapeForAttr(t)}')">&times;</button></span>`
+    ).join("");
+
+    const stepsHtml = s.steps.map((step, i) => `
+        <div class="builder-row" draggable="true"
+             ondragstart="handleDragStart(event, ${i})"
+             ondragover="handleDragOver(event, ${i})"
+             ondrop="handleDrop(event, ${i})">
+            <span class="drag-handle" title="Drag to reorder">&#9776;</span>
+            <div class="builder-row-fields">
+                <input type="text" class="builder-input name-input" value="${escapeAttrValue(step.name)}"
+                       placeholder="Exercise name" oninput="updateStepField('${step.id}', 'name', this.value)">
+                <select class="builder-select" onchange="updateStepField('${step.id}', 'mode', this.value)">
+                    <option value="reps" ${step.mode === "reps" ? "selected" : ""}>Reps</option>
+                    <option value="time" ${step.mode === "time" ? "selected" : ""}>Time</option>
+                </select>
+                ${step.mode === "reps"
+                    ? `<input type="text" class="builder-input value-input" placeholder="e.g. x10" value="${escapeAttrValue(step.reps)}" oninput="updateStepField('${step.id}', 'reps', this.value)">`
+                    : `<input type="number" min="0" class="builder-input value-input" placeholder="Seconds" value="${step.duration}" oninput="updateStepField('${step.id}', 'duration', this.value)">`
+                }
+                <input type="number" min="0" class="builder-input rest-input" placeholder="Rest override (s)" value="${step.restOverride ?? ""}" oninput="updateStepField('${step.id}', 'restOverride', this.value)">
+            </div>
+            <div class="builder-row-actions">
+                <button class="reorder-btn" onclick="moveStep(${i}, -1)" title="Move up">&#9650;</button>
+                <button class="reorder-btn" onclick="moveStep(${i}, 1)" title="Move down">&#9660;</button>
+                <button class="delete-btn" onclick="deleteStepFromBuilder('${step.id}')" title="Remove">&times;</button>
+            </div>
+        </div>
+    `).join("");
+
+    content.innerHTML = `
+        <input type="text" class="builder-input builder-title-input" placeholder="Workout name"
+               value="${escapeAttrValue(s.title)}" oninput="builderState.title = this.value">
+
+        <div class="builder-section">
+            <label class="builder-label">Tags</label>
+            <div class="tag-chip-row">${tagsHtml}</div>
+            <div class="tag-add-row">
+                <input type="text" id="builder-tag-input" class="builder-input" placeholder="e.g. Upper Body, 30 min">
+                <button class="link-btn small" onclick="addTagToBuilder()">+ Add Tag</button>
+            </div>
+        </div>
+
+        <div class="builder-section">
+            <label class="builder-label">Default rest between exercises (seconds)</label>
+            <input type="number" min="0" class="builder-input" style="max-width:100px;"
+                   value="${s.defaultRest}" oninput="builderState.defaultRest = Number(this.value) || 0">
+        </div>
+
+        <div class="builder-section">
+            <label class="builder-label">Paste a workout list</label>
+            <textarea id="builder-paste-area" class="builder-textarea" rows="4"
+                      placeholder="Paste exercises, one per line — e.g.&#10;Push ups x10&#10;Plank 45s&#10;Squats x12"></textarea>
+            <button class="link-btn small" onclick="parseAndAddPastedExercises()">Parse &amp; Add</button>
+        </div>
+
+        <div class="builder-section">
+            <label class="builder-label">Exercises</label>
+            <div id="builder-steps-list">${stepsHtml || '<p style="color:#888; font-size:0.8rem;">No exercises yet — paste a list above or add one manually.</p>'}</div>
+            <button class="link-btn small" onclick="addBlankExerciseRow()">+ Add Exercise</button>
+        </div>
+
+        <div class="builder-actions">
+            <button class="auth-submit" onclick="saveBuilder()">Save Workout</button>
+        </div>
+    `;
+}
+
+function escapeAttrValue(str) {
+    return String(str || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+}
+
+function updateStepField(stepId, field, value) {
+    const step = builderState.steps.find(s => s.id === stepId);
+    if (!step) return;
+
+    if (field === "duration") step.duration = Number(value) || 0;
+    else if (field === "restOverride") step.restOverride = value === "" ? null : Number(value);
+    else step[field] = value;
+
+    if (field === "mode") renderBuilder(); // the value input needs to switch between reps/time
+}
+
+function addBlankExerciseRow() {
+    builderState.steps.push({ id: generateStepId(), cat: "EXERCISES", name: "", mode: "reps", reps: "", duration: 40, tip: "", restOverride: null });
+    renderBuilder();
+}
+
+function deleteStepFromBuilder(stepId) {
+    builderState.steps = builderState.steps.filter(s => s.id !== stepId);
+    renderBuilder();
+}
+
+function parseAndAddPastedExercises() {
+    const textarea = document.getElementById("builder-paste-area");
+    const text = textarea.value.trim();
+    if (!text) return;
+
+    const parsed = parseExerciseLines(text);
+    builderState.steps = [...builderState.steps, ...parsed];
+    renderBuilder();
+}
+
+function addTagToBuilder() {
+    const input = document.getElementById("builder-tag-input");
+    const tag = input.value.trim();
+    if (!tag) return;
+    if (!builderState.tags.some(t => t.toLowerCase() === tag.toLowerCase())) {
+        builderState.tags.push(tag);
+    }
+    renderBuilder();
+}
+
+function removeTagFromBuilder(tag) {
+    builderState.tags = builderState.tags.filter(t => t !== tag);
+    renderBuilder();
+}
+
+// Reorder via drag-and-drop (mouse/desktop) ...
+function handleDragStart(e, index) {
+    dragFromIndex = index;
+    e.dataTransfer.effectAllowed = "move";
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+}
+
+function handleDrop(e, index) {
+    e.preventDefault();
+    if (dragFromIndex === null || dragFromIndex === index) return;
+    const [moved] = builderState.steps.splice(dragFromIndex, 1);
+    builderState.steps.splice(index, 0, moved);
+    dragFromIndex = null;
+    renderBuilder();
+}
+
+// ... and via up/down buttons (works everywhere, including touch,
+// where native HTML5 drag-and-drop mostly doesn't).
+function moveStep(index, direction) {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= builderState.steps.length) return;
+    const steps = builderState.steps;
+    [steps[index], steps[newIndex]] = [steps[newIndex], steps[index]];
+    renderBuilder();
+}
+
+async function saveBuilder() {
+    if (!builderState.title || !builderState.title.trim()) {
+        alert("Give the workout a name first.");
+        return;
+    }
+
+    const payload = {
+        title: builderState.title.trim(),
+        subtitle: builderState.subtitle || "Your custom workout",
+        tags: builderState.tags,
+        defaultRest: builderState.defaultRest,
+        steps: builderState.steps.map(s => ({
+            id: s.id,
+            cat: s.cat || "EXERCISES",
+            name: s.name,
+            mode: s.mode,
+            duration: Number(s.duration) || 40,
+            reps: s.mode === "reps" ? (s.reps || "") : "",
+            tip: s.tip || "",
+            restOverride: (s.restOverride === null || s.restOverride === undefined || s.restOverride === "") ? null : Number(s.restOverride)
+        }))
+    };
+
+    if (builderState.id) {
+        await window.updateCustomWorkout(builderState.id, payload);
+    } else {
+        await window.createCustomWorkoutFull(payload);
+    }
+
+    closeBuilder();
+    renderMyWorkoutsSection();
 }
 
 async function openHistory() {

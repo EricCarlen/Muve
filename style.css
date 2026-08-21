@@ -940,3 +940,227 @@ body {
     color: #666;
     text-decoration: underline;
 }
+
+/* ---- My Workouts header & tag filter ---- */
+.my-workouts-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 5px;
+}
+
+.my-workouts-header .section-title {
+    margin: 0;
+}
+
+.tag-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    max-width: 500px;
+    width: 90%;
+    margin: 0 auto 15px;
+}
+
+.tag-filter-chip {
+    background: #fff;
+    border: 1px solid #ddd;
+    color: #555;
+    padding: 5px 12px;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-radius: 20px;
+}
+
+.tag-filter-chip.active {
+    background: #000;
+    color: #fff;
+    border-color: #000;
+}
+
+.workout-btn-icons {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: none;
+}
+
+.edit-workout-btn {
+    color: #555;
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 0 2px;
+}
+
+/* ---- Builder / Manage overlays ---- */
+.builder-content {
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.builder-title-input {
+    font-size: 1rem;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.builder-section {
+    margin-bottom: 22px;
+}
+
+.builder-label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #888;
+    margin-bottom: 8px;
+}
+
+.builder-input,
+.builder-select,
+.builder-textarea {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 0.85rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.builder-textarea {
+    resize: vertical;
+    margin-bottom: 10px;
+}
+
+.tag-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.tag-chip {
+    background: #f2f2f2;
+    border-radius: 20px;
+    padding: 5px 10px;
+    font-size: 0.7rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.tag-chip button {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #c00;
+    font-size: 0.85rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.tag-add-row {
+    display: flex;
+    gap: 8px;
+}
+
+.tag-add-row .builder-input {
+    flex: 1;
+}
+
+.builder-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.drag-handle {
+    cursor: grab;
+    color: #bbb;
+    font-size: 1rem;
+    flex: none;
+    touch-action: none;
+}
+
+.builder-row-fields {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 6px;
+}
+
+.builder-row-fields .name-input {
+    grid-column: 1 / -1;
+    margin-bottom: 4px;
+}
+
+.builder-row-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: none;
+}
+
+.reorder-btn {
+    background: none;
+    border: none;
+    color: #999;
+    font-size: 0.6rem;
+    padding: 2px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.reorder-btn:hover {
+    color: #000;
+}
+
+.builder-actions {
+    margin-top: 10px;
+    padding-top: 10px;
+}
+
+.manage-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.manage-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 4px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.manage-row input {
+    width: 18px;
+    height: 18px;
+}
+
+@media (max-width: 480px) {
+    .builder-row-fields {
+        grid-template-columns: 1fr 1fr;
+    }
+    .builder-row-fields .name-input {
+        grid-column: 1 / -1;
+    }
+    .builder-row {
+        align-items: flex-start;
+    }
+}

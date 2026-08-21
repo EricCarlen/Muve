@@ -7,7 +7,7 @@ import {
     sendPasswordResetEmail, signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
 import {
-    getFirestore, collection, doc, addDoc, deleteDoc, updateDoc, getDocs,
+    getFirestore, collection, doc, addDoc, deleteDoc, updateDoc, setDoc, getDoc, getDocs,
     query, orderBy, limit, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
@@ -89,11 +89,13 @@ onAuthStateChanged(auth, async (user) => {
         }
         await window.loadCustomExercises();
         await window.loadCustomWorkouts();
+        await window.loadUserSettings();
     } else {
         if (loginBtn) loginBtn.style.display = "inline-flex";
         if (profileChip) profileChip.style.display = "none";
         window.customExercisesByCategory = {};
         window.customWorkouts = [];
+        window.userSettings = {};
     }
 
     // Re-render whatever workout is currently open, now that sign-in
@@ -118,13 +120,14 @@ window.loadCustomExercises = async function () {
     window.customExercisesByCategory = byCategory;
 };
 
-window.addCustomExercise = async function (category, name, duration, tip) {
+window.addCustomExercise = async function (category, name, duration, tip, reps) {
     if (!currentUser) { alert("Sign in first to add your own exercises."); return; }
     await addDoc(collection(db, "users", currentUser.uid, "customExercises"), {
         category,
         name,
         duration: Number(duration) || 40,
         tip: tip || "",
+        reps: reps || "",
         createdAt: serverTimestamp()
     });
     await window.loadCustomExercises();
@@ -167,7 +170,8 @@ window.getRecentLogs = async function () {
 
 // ============================================================
 // CUSTOM WORKOUTS  (users/{uid}/customWorkouts)
-// Each doc: { title, subtitle, steps: [{ id, cat, name, duration, tip }] }
+// Each doc: { title, subtitle, tags: [], defaultRest: number,
+//             steps: [{ id, cat, name, mode, duration, reps, tip, restOverride }] }
 // ============================================================
 window.customWorkouts = [];
 
@@ -177,16 +181,24 @@ window.loadCustomWorkouts = async function () {
     window.customWorkouts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 };
 
-window.createCustomWorkout = async function (title) {
+// Creates a fully-formed workout from the builder (title, tags,
+// defaultRest, and all its steps) in one write.
+window.createCustomWorkoutFull = async function (payload) {
     if (!currentUser) { alert("Sign in first to create your own workout."); return null; }
     const ref = await addDoc(collection(db, "users", currentUser.uid, "customWorkouts"), {
-        title,
-        subtitle: "Your custom workout",
-        steps: [],
+        ...payload,
         createdAt: serverTimestamp()
     });
     await window.loadCustomWorkouts();
     return ref.id;
+};
+
+// Overwrites an existing workout with the builder's current state —
+// used both for editing details and for reordering/adding/removing steps.
+window.updateCustomWorkout = async function (workoutId, payload) {
+    if (!currentUser) return;
+    await updateDoc(doc(db, "users", currentUser.uid, "customWorkouts", workoutId), payload);
+    await window.loadCustomWorkouts();
 };
 
 window.deleteCustomWorkout = async function (workoutId) {
@@ -195,20 +207,21 @@ window.deleteCustomWorkout = async function (workoutId) {
     await window.loadCustomWorkouts();
 };
 
-window.addStepToCustomWorkout = async function (workoutId, step) {
-    if (!currentUser) return;
-    const workout = window.customWorkouts.find(w => w.id === workoutId);
-    if (!workout) return;
-    const newSteps = [...(workout.steps || []), step];
-    await updateDoc(doc(db, "users", currentUser.uid, "customWorkouts", workoutId), { steps: newSteps });
-    await window.loadCustomWorkouts();
+// ============================================================
+// USER SETTINGS  (users/{uid} — a single doc)
+// Currently just holds which workouts are visible on the My Workouts
+// screen. A missing/undefined visibleWorkouts means "show everything."
+// ============================================================
+window.userSettings = {};
+
+window.loadUserSettings = async function () {
+    if (!currentUser) { window.userSettings = {}; return; }
+    const snap = await getDoc(doc(db, "users", currentUser.uid));
+    window.userSettings = snap.exists() ? snap.data() : {};
 };
 
-window.removeStepFromCustomWorkout = async function (workoutId, stepId) {
+window.saveVisibleWorkouts = async function (visibleList) {
     if (!currentUser) return;
-    const workout = window.customWorkouts.find(w => w.id === workoutId);
-    if (!workout) return;
-    const newSteps = (workout.steps || []).filter(s => s.id !== stepId);
-    await updateDoc(doc(db, "users", currentUser.uid, "customWorkouts", workoutId), { steps: newSteps });
-    await window.loadCustomWorkouts();
+    await setDoc(doc(db, "users", currentUser.uid), { visibleWorkouts: visibleList }, { merge: true });
+    window.userSettings.visibleWorkouts = visibleList;
 };
