@@ -27,28 +27,33 @@
         <span id="greeting"></span>
     </header>
 
-    <div class="category-grid single-column">
-        <button class="filter-btn" onclick="filterWorkouts('morning', this)">
-            <span>Morning</span>
-        </button>
-        <button class="filter-btn" onclick="filterWorkouts('upper body', this)">
-            <span>Upper Body</span>
-        </button>
-        <button class="filter-btn" onclick="filterWorkouts('core', this)">
-            <span>Core</span>
-        </button>
-        <button class="filter-btn" onclick="filterWorkouts('lower body', this)">
-            <span>Lower Body</span>
-        </button>
-        <button class="filter-btn" onclick="filterWorkouts('mobility side', this)">
-            <span>Mobility</span>
-        </button>
-        <button class="filter-btn" onclick="filterWorkouts('evening', this)">
-            <span>Evening</span>
-        </button>
+    <div id="examples-section">
+        <div class="category-grid single-column">
+            <button class="filter-btn" onclick="filterWorkouts('morning', this)">
+                <span>Morning</span>
+            </button>
+            <button class="filter-btn" onclick="filterWorkouts('upper body', this)">
+                <span>Upper Body</span>
+            </button>
+            <button class="filter-btn" onclick="filterWorkouts('core', this)">
+                <span>Core</span>
+            </button>
+            <button class="filter-btn" onclick="filterWorkouts('lower body', this)">
+                <span>Lower Body</span>
+            </button>
+            <button class="filter-btn" onclick="filterWorkouts('mobility side', this)">
+                <span>Mobility</span>
+            </button>
+            <button class="filter-btn" onclick="filterWorkouts('evening', this)">
+                <span>Evening</span>
+            </button>
+        </div>
     </div>
 
     <p id="signin-prompt" class="signin-prompt">Sign in to unlock the full workout library and build your own.</p>
+    <p id="browse-examples-link" class="signin-prompt" style="display:none;">
+        <a href="#" onclick="toggleExamplesVisible(); return false;" id="browse-examples-anchor">Browse example workouts</a>
+    </p>
 
     <div id="my-workouts-section" class="my-workouts-section" style="display:none;">
         <div class="my-workouts-header">
@@ -83,8 +88,9 @@
 
         <!-- CENTER CONTROLS -->
         <div class="workout-controls" id="workout-controls">
+            <button id="back-btn" class="control-btn secondary" onclick="previousStep()">&#9664;</button>
             <button id="play-pause-btn" class="control-btn" onclick="togglePlayPause()">&#9658;</button>
-            <button id="skip-btn" class="control-btn" onclick="skipStep()">&#10141;</button>
+            <button id="skip-btn" class="control-btn secondary" onclick="skipStep()">&#10141;</button>
         </div>
 
         <!-- WORKOUT CONTENT -->
@@ -162,6 +168,31 @@
                 <div class="header-right"></div>
             </div>
             <div id="manage-content" class="builder-content"></div>
+        </div>
+
+        <!-- BREATHING EXERCISE OVERLAY -->
+        <div id="breathing-overlay" class="overlay">
+            <div class="workout-header">
+                <div class="header-left">
+                    <button class="close-btn" onclick="closeBreathing()">&#8592;</button>
+                </div>
+                <h1>Breathing</h1>
+                <div class="header-right"></div>
+            </div>
+            <div class="breathing-content">
+                <div class="breathing-duration-row" id="breathing-setup">
+                    <label class="builder-label">Duration (minutes)</label>
+                    <input type="number" id="breathing-duration" class="builder-input" min="1" max="30" value="2" style="max-width:100px; margin: 10px auto;">
+                    <button class="auth-submit" onclick="startBreathing()">Start</button>
+                </div>
+
+                <div id="breathing-visual-wrap" style="display:none;">
+                    <div id="breathing-visual" class="breathing-circle"></div>
+                    <div id="breathing-phase-label" class="breathing-phase-label">Ready</div>
+                    <div id="breathing-time-left" class="breathing-time-left"></div>
+                    <button class="link-btn small" onclick="stopBreathing()">Stop</button>
+                </div>
+            </div>
         </div>
 
         <div class="footer-right">

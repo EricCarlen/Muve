@@ -313,6 +313,16 @@ button:hover {
     display: block; /* Ensures it stays on its own line */
 }
 
+.total-duration {
+    text-align: center;
+    font-size: 0.7rem;
+    color: #aaa;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: -10px;
+    margin-bottom: 15px;
+}
+
 .workout-header {
     display: flex;
     justify-content: space-between;
@@ -528,12 +538,13 @@ button:hover {
     transform: scale(0.9);
 }
 
-#skip-btn {
+.control-btn.secondary {
     background: #f8f8f8;
     color: #000;
     border: 1px solid #ddd;
     width: 50px;
     height: 50px;
+    font-size: 0.9rem;
 }
 
 .exercise-info-wrapper {
@@ -1106,6 +1117,13 @@ body {
     margin-bottom: 4px;
 }
 
+.builder-row-fields .tip-input {
+    grid-column: 1 / -1;
+    margin-top: 4px;
+    font-size: 0.75rem;
+    color: #666;
+}
+
 .builder-row-actions {
     display: flex;
     flex-direction: column;
@@ -1151,6 +1169,60 @@ body {
 .manage-row input {
     width: 18px;
     height: 18px;
+}
+
+/* ---- Breathing button (bottom of every workout) ---- */
+.breathing-row {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+/* ---- Breathing exercise overlay ---- */
+#breathing-overlay {
+    z-index: 1050; /* above the workout view (1000) it was opened from */
+}
+
+.breathing-content {
+    width: 100%;
+    max-width: 400px;
+    margin: 40px auto 0;
+    padding: 20px;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.breathing-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: #00ffcc;
+    opacity: 0.7;
+    margin: 50px auto;
+    transform: scale(1);
+    transition: transform 5s ease-in-out;
+}
+
+.breathing-circle.inhale {
+    transform: scale(1.8);
+}
+
+.breathing-phase-label {
+    font-size: 0.9rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+}
+
+.breathing-time-left {
+    font-size: 0.75rem;
+    color: #888;
+    margin-bottom: 25px;
+    font-family: monospace;
 }
 
 @media (max-width: 480px) {

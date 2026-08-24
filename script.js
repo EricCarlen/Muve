@@ -90,7 +90,7 @@ const WORKOUTS = {
 
     "upper body": {
         title: "Upper Body Strength",
-        subtitle: "Tense your core and crush those weights",
+        subtitle: "Bodyweight — tense your core and push",
         steps: [
             // WARM UP
             { cat: "WARM UP", name: "Quadruped Step-through x 20", duration: 60, tip: "Keep it smooth" },
@@ -110,11 +110,11 @@ const WORKOUTS = {
             ...buildRounds([
                 { name: "Pull-up to Knee Raise x 5", duration: 60, tip: "Slow elbow-to-knee, pause briefly at contact" },
                 { name: "Rest", duration: 15 },
-                { name: "Push-up to Dumbbell Row x 5/side", duration: 60, tip: "Keep hips square, don't rotate through the row" },
+                { name: "Push-up to Renegade Row x 5/side", duration: 60, tip: "Keep hips square, don't rotate through the row" },
                 { name: "Rest", duration: 15 },
-                { name: "Hammer Curl to Arnold Press x 5", duration: 60, tip: "Smooth transition, control the rotation at the top" },
+                { name: "Pike Push-up x 5", duration: 60, tip: "Hips high, crown of head toward the floor, control the descent" },
                 { name: "Rest", duration: 15 },
-                { name: "Floor Bridge with Chest Fly x 10", duration: 60, tip: "Squeeze glutes at the top, control the fly" },
+                { name: "Floor Bridge with Rear Delt Fly x 10", duration: 60, tip: "Squeeze glutes at the top, control the fly" },
                 { name: "Rest", duration: 15 },
                 { name: "Y Raise – 40s on 20s off", duration: 40, tip: "Thumbs up, lead with the elbows" },
                 { name: "Rest", duration: 120 }
@@ -124,11 +124,11 @@ const WORKOUTS = {
             ...buildRounds([
                 { name: "Hand Release Push-up to Downward Dog – 40s", duration: 40, tip: "Full chest to floor, press back with control" },
                 { name: "Rest", duration: 20 },
-                { name: "Overhead Dumbbell Press to Lateral & Front Raises – 40s", duration: 40, tip: "Ribs down, avoid arching the lower back" },
+                { name: "Pike-to-Plank Shoulder Taps – 40s", duration: 40, tip: "Ribs down, avoid arching the lower back" },
                 { name: "Rest", duration: 20 },
-                { name: "Single-leg Dumbbell Row – 40s", duration: 40, tip: "Brace core, minimal hip sway" },
+                { name: "Single-arm Plank Row (bodyweight) – 40s", duration: 40, tip: "Brace core, minimal hip sway" },
                 { name: "Rest", duration: 20 },
-                { name: "Bicep Curl x 5", duration: 40, tip: "No swinging, squeeze at the top" },
+                { name: "Diamond Push-up x 5", duration: 40, tip: "Elbows tucked, squeeze at the top" },
                 { name: "Rest", duration: 120 }
             ], "BLOCK B", 2),
 
@@ -151,7 +151,7 @@ const WORKOUTS = {
 
     "lower body": {
         title: "Lower Body",
-        subtitle: "Strength is a skill",
+        subtitle: "Bodyweight — strength is a skill",
         next: "core control",
         steps: [
             { cat: "WARM UP", name: "World's Greatest Stretch", duration: 45 },
@@ -161,15 +161,15 @@ const WORKOUTS = {
             { cat: "WARM UP", name: "Slender Lateral Drop", duration: 45 },
 
             ...buildRounds([
-                { name: "Goblet Sumo Squats (Heavy)", duration: 45, tip: "Squat & Power Superset — heavy, controlled reps" },
+                { name: "Bodyweight Sumo Squats", duration: 45, tip: "Squat & Power Superset — full depth, controlled reps" },
                 { name: "Monster Walks", duration: 45 },
                 { name: "Rest", duration: 20 },
-                { name: "Dumbbell Romanian Deadlift", duration: 45, tip: "Posterior Chain Superset — hinge at the hips, flat back" },
+                { name: "Single-leg Romanian Deadlift", duration: 45, tip: "Posterior Chain Superset — hinge at the hips, flat back" },
                 { name: "Nordic Leans", duration: 45 },
-                { name: "Single-leg Deadlift", duration: 45 },
+                { name: "Single-leg Glute Bridge", duration: 45 },
                 { name: "Rest", duration: 20 },
                 { name: "Reverse Nordics", duration: 45, tip: "Nordic & Glute Focus — control the descent" },
-                { name: "Weighted Single Leg Glute Bridges", duration: 45 },
+                { name: "Single Leg Glute Bridge Pulses", duration: 45 },
                 { name: "Rest", duration: 45 }
             ], "MAIN", 3),
 
@@ -608,6 +608,7 @@ function renderListSteps(workout, mergedSteps) {
 
     html += `</div>`;
     html += nextWorkoutButton(workout);
+    html += breathingButton();
     content.innerHTML = html;
 }
 
@@ -751,19 +752,33 @@ const FULL_WORKOUT_LIST = [
 ];
 
 // Called from auth.js whenever sign-in state or custom workouts change.
+let examplesVisible = false; // only relevant once signed in — toggled by "Browse example workouts"
+
 function renderMyWorkoutsSection() {
     const section = document.getElementById("my-workouts-section");
     const promptEl = document.getElementById("signin-prompt");
+    const examplesSection = document.getElementById("examples-section");
+    const browseLink = document.getElementById("browse-examples-link");
     if (!section) return;
 
     const signedIn = window.isSignedIn && window.isSignedIn();
 
     if (!signedIn) {
+        // Logged out: the 6 curated examples are the main page, as before.
         section.style.display = "none";
         if (promptEl) promptEl.style.display = "block";
+        if (browseLink) browseLink.style.display = "none";
+        if (examplesSection) examplesSection.style.display = "block";
         return;
     }
+
+    // Logged in: My Workouts (their own library) takes over the main area.
+    // The example workouts are still reachable, just tucked behind a link
+    // rather than sitting on the page by default.
     if (promptEl) promptEl.style.display = "none";
+    if (browseLink) browseLink.style.display = "block";
+    if (examplesSection) examplesSection.style.display = examplesVisible ? "block" : "none";
+    updateBrowseExamplesLabel();
     section.style.display = "flex";
 
     // A null visibleWorkouts setting means "show everything" (the default,
@@ -808,6 +823,17 @@ function renderMyWorkoutsSection() {
              </button>`;
 
     grid.innerHTML = html;
+}
+
+function toggleExamplesVisible() {
+    examplesVisible = !examplesVisible;
+    document.getElementById("examples-section").style.display = examplesVisible ? "block" : "none";
+    updateBrowseExamplesLabel();
+}
+
+function updateBrowseExamplesLabel() {
+    const anchor = document.getElementById("browse-examples-anchor");
+    if (anchor) anchor.innerText = examplesVisible ? "Hide example workouts" : "Browse example workouts";
 }
 
 function renderTagFilterBar(visibleCustomWorkouts) {
@@ -963,6 +989,8 @@ function renderBuilder() {
                     : `<input type="number" min="0" class="builder-input value-input" placeholder="Seconds" value="${step.duration}" oninput="updateStepField('${step.id}', 'duration', this.value)">`
                 }
                 <input type="number" min="0" class="builder-input rest-input" placeholder="Rest override (s)" value="${step.restOverride ?? ""}" oninput="updateStepField('${step.id}', 'restOverride', this.value)">
+                <input type="text" class="builder-input tip-input" placeholder="Optional tip, e.g. &quot;Keep chest tall&quot;"
+                       value="${escapeAttrValue(step.tip)}" oninput="updateStepField('${step.id}', 'tip', this.value)">
             </div>
             <div class="builder-row-actions">
                 <button class="reorder-btn" onclick="moveStep(${i}, -1)" title="Move up">&#9650;</button>
@@ -1163,7 +1191,10 @@ async function openHistory() {
 function renderTimedSteps() {
     const content = document.getElementById("overlay-content");
     const workout = getActiveWorkout();
-    let html = `<div class="set-counter">${workout.subtitle || ""}</div><div class="workout-list">`;
+    const totalSeconds = steps.reduce((acc, s) => acc + s.duration, 0);
+    let html = `<div class="set-counter">${workout.subtitle || ""}</div>
+                <div class="total-duration">Total: ${formatDuration(totalSeconds)}</div>
+                <div class="workout-list">`;
     let lastCat = "";
 
     steps.forEach((step, index) => {
@@ -1191,6 +1222,7 @@ function renderTimedSteps() {
     });
 
     html += `</div>`;
+    html += breathingButton();
     content.innerHTML = html;
 
     const tipElement = document.getElementById("active-tip");
@@ -1201,6 +1233,97 @@ function renderTimedSteps() {
             tipElement.innerText = steps[currentStep].tip || "Keep your form tight!";
         }
     }
+}
+
+// ============================================================
+// BREATHING EXERCISE — a self-contained overlay reachable from any
+// workout without losing your place in it. Fixed 5s inhale / 5s exhale
+// cycle, repeating for however long the person sets (default 2 min).
+// ============================================================
+let breathingCountdownTimer = null;
+let breathingPhaseTimeout = null;
+let breathingEndTime = 0;
+
+function openBreathing() {
+    ensureAudioContext();
+
+    // Pause the main workout timer (if running) so it doesn't keep
+    // ticking unnoticed while breathing — doesn't auto-resume on close,
+    // so the person picks back up deliberately.
+    if (!isPaused && document.getElementById("play-pause-btn")) {
+        togglePlayPause();
+    }
+
+    resetBreathingUI();
+    const overlay = document.getElementById("breathing-overlay");
+    overlay.classList.add("active");
+    overlay.style.display = "flex";
+}
+
+function closeBreathing() {
+    stopBreathing();
+    const overlay = document.getElementById("breathing-overlay");
+    overlay.classList.remove("active");
+    overlay.style.display = "none";
+}
+
+function resetBreathingUI() {
+    document.getElementById("breathing-setup").style.display = "block";
+    document.getElementById("breathing-visual-wrap").style.display = "none";
+    document.getElementById("breathing-visual").classList.remove("inhale");
+    document.getElementById("breathing-phase-label").innerText = "Ready";
+    document.getElementById("breathing-time-left").innerText = "";
+}
+
+function startBreathing() {
+    const minutes = Number(document.getElementById("breathing-duration").value) || 2;
+    breathingEndTime = Date.now() + minutes * 60 * 1000;
+
+    document.getElementById("breathing-setup").style.display = "none";
+    document.getElementById("breathing-visual-wrap").style.display = "block";
+
+    runBreathingPhase("in");
+    breathingCountdownTimer = setInterval(updateBreathingCountdown, 1000);
+}
+
+function runBreathingPhase(phase) {
+    if (Date.now() >= breathingEndTime) { stopBreathing(); return; }
+
+    const visual = document.getElementById("breathing-visual");
+    const label = document.getElementById("breathing-phase-label");
+
+    if (phase === "in") {
+        label.innerText = "Breathe In";
+        visual.classList.add("inhale");
+        playBeep(660, 180, 0.12); // higher pitch for inhale
+        breathingPhaseTimeout = setTimeout(() => runBreathingPhase("out"), 5000);
+    } else {
+        label.innerText = "Breathe Out";
+        visual.classList.remove("inhale");
+        playBeep(330, 180, 0.12); // lower pitch for exhale
+        breathingPhaseTimeout = setTimeout(() => runBreathingPhase("in"), 5000);
+    }
+}
+
+function updateBreathingCountdown() {
+    const remaining = Math.max(0, Math.round((breathingEndTime - Date.now()) / 1000));
+    const m = Math.floor(remaining / 60);
+    const s = remaining % 60;
+    const timeEl = document.getElementById("breathing-time-left");
+    if (timeEl) timeEl.innerText = `${m}:${s < 10 ? "0" + s : s} left`;
+    if (remaining <= 0) stopBreathing();
+}
+
+function stopBreathing() {
+    clearTimeout(breathingPhaseTimeout);
+    clearInterval(breathingCountdownTimer);
+    resetBreathingUI();
+}
+
+function breathingButton() {
+    return `<div class="breathing-row">
+                <button class="link-btn small" onclick="openBreathing()">&#129496; Breathing</button>
+             </div>`;
 }
 
 function nextWorkoutButton(workout) {
@@ -1235,7 +1358,43 @@ function closeWorkout() {
 // ============================================================
 // TIMER CONTROLS
 // ============================================================
+// ============================================================
+// SOUND — short synthesized beeps (no audio files needed). AudioContext
+// can't start until a real user gesture (tap/click), so it's created
+// lazily the first time togglePlayPause or a breathing session runs.
+// ============================================================
+let audioCtx = null;
+
+function ensureAudioContext() {
+    if (!audioCtx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (AC) audioCtx = new AC();
+    }
+    return audioCtx;
+}
+
+function playBeep(frequency = 880, durationMs = 150, volume = 0.15) {
+    const ctx = ensureAudioContext();
+    if (!ctx) return;
+    try {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = frequency;
+        gain.gain.setValueAtTime(volume, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + durationMs / 1000);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + durationMs / 1000);
+    } catch (e) {
+        // Audio isn't available in this browser/context — fail silently,
+        // a missing beep shouldn't break the workout.
+    }
+}
+
 function togglePlayPause() {
+    ensureAudioContext();
     const btn = document.getElementById("play-pause-btn");
     if (isPaused) {
         isPaused = false;
@@ -1267,7 +1426,10 @@ function startTicker() {
         }
 
         const timePassedForSteps = steps.slice(0, currentStep + 1).reduce((acc, s) => acc + s.duration, 0);
-        if (elapsed >= timePassedForSteps) goToNextStep();
+        if (elapsed >= timePassedForSteps) {
+            playBeep(); // the exercise or rest timer just hit zero
+            goToNextStep();
+        }
     }, 1000);
 }
 
@@ -1292,4 +1454,13 @@ function goToNextStep() {
     } else {
         renderTimedSteps();
     }
+}
+
+// Steps back to the previous exercise/rest and resets the timer to the
+// start of it, so the countdown for that step runs in full again.
+function previousStep() {
+    if (currentStep <= 0) return;
+    currentStep--;
+    elapsed = steps.slice(0, currentStep).reduce((acc, s) => acc + s.duration, 0);
+    renderTimedSteps();
 }
