@@ -143,6 +143,9 @@ window.deleteCustomExercise = async function (id) {
 
 // ============================================================
 // SET / REP LOGS  (users/{uid}/logs)
+// Kept for back-compat with any existing callers — workout history now
+// goes through the WORKOUT HISTORY section below instead, which is what
+// the workout-overlay's Previous/Today fields and history screens use.
 // ============================================================
 window.logSetEntry = async function (category, exerciseName, sets, reps, weight) {
     if (!currentUser) { alert("Sign in to save your sets & reps."); return; }
@@ -205,6 +208,83 @@ window.deleteCustomWorkout = async function (workoutId) {
     if (!currentUser) return;
     await deleteDoc(doc(db, "users", currentUser.uid, "customWorkouts", workoutId));
     await window.loadCustomWorkouts();
+};
+
+// ============================================================
+// WORKOUT HISTORY  (users/{uid}/workoutHistory)
+// One doc per completed session:
+//   { workoutId, workoutTitle, durationSeconds, performance: [...], completedAt }
+// `performance` is the array script.js's buildPerformanceEntries()
+// builds — one entry per exercise/round the user actually logged a
+// weight or rep count for:
+//   { sectionName, round, totalRounds, exerciseId, exerciseName, weight, reps }
+// ============================================================
+
+// Called by script.js's finishAndSaveWorkout() (List mode) and
+// saveTimedWorkoutSession() (Timed mode, on completion).
+window.saveWorkoutSession = async function (sessionData) {
+    if (!currentUser) return null;
+    const ref = await addDoc(collection(db, "users", currentUser.uid, "workoutHistory"), {
+        workoutId: sessionData.workoutId || null,
+        workoutTitle: sessionData.workoutTitle || "Workout",
+        durationSeconds: Number(sessionData.durationSeconds) || 0,
+        performance: sessionData.performance || [],
+        completedAt: serverTimestamp()
+    });
+    return ref.id;
+};
+
+// Powers the Workout History overview (7.1) — most recent sessions first.
+window.loadWorkoutHistoryList = async function () {
+    if (!currentUser) return [];
+    const q = query(
+        collection(db, "users", currentUser.uid, "workoutHistory"),
+        orderBy("completedAt", "desc"),
+        limit(50)
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+};
+
+// Powers the individual session detail view (7.2). Only used as a
+// fallback — script.js already has the full record in memory from
+// loadWorkoutHistoryList() in the common case.
+window.loadWorkoutHistoryDetail = async function (sessionId) {
+    if (!currentUser) return null;
+    const snap = await getDoc(doc(db, "users", currentUser.uid, "workoutHistory", sessionId));
+    return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+};
+
+// Looks at the user's most recent completed session for this specific
+// workout and returns a map of "<round>::<exerciseId>" -> { weight, reps }
+// so script.js can show "Previous: 20kg × 10 reps" against each exercise.
+// Scans the last 20 sessions client-side for a workoutId match rather
+// than a Firestore "where" query, so no composite index is required.
+// Only the single most recent matching session is used — earlier ones
+// remain visible via Workout History if the user wants to look further back.
+window.loadPreviousPerformance = async function (workoutId) {
+    if (!currentUser || !workoutId) return {};
+
+    const q = query(
+        collection(db, "users", currentUser.uid, "workoutHistory"),
+        orderBy("completedAt", "desc"),
+        limit(20)
+    );
+    const snap = await getDocs(q);
+
+    for (const docSnap of snap.docs) {
+        const data = docSnap.data();
+        if (data.workoutId !== workoutId) continue;
+
+        const map = {};
+        (data.performance || []).forEach(entry => {
+            if (!entry.exerciseId) return;
+            map[`${entry.round}::${entry.exerciseId}`] = { weight: entry.weight, reps: entry.reps };
+        });
+        return map;
+    }
+
+    return {};
 };
 
 // ============================================================

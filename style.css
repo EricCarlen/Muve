@@ -416,6 +416,16 @@ button:hover {
     font-weight: 500;
 }
 
+/* History overview rows are clickable — open the full session detail. */
+.history-row {
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.history-row:hover {
+    opacity: 0.6;
+}
+
 /* ==========================================================================
    BOTTOM TIMER DESIGN
    ========================================================================== */
@@ -853,6 +863,47 @@ body {
 .log-btn:hover {
     background: #00ffcc;
     color: #000;
+}
+
+/* ---- Previous performance / today's log (used inside each reps-mode
+   exercise row in the workout view — see renderPerformanceFields in
+   script.js). Auto-saves on input, so no separate "log" button. ---- */
+.performance-row {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.performance-previous {
+    font-size: 0.65rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.performance-inputs {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.perf-weight,
+.perf-reps {
+    width: 60px;
+    padding: 6px 4px;
+    font-size: 0.75rem;
+    text-align: center;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.perf-x {
+    font-size: 0.7rem;
+    color: #999;
 }
 
 /* ---- Login / Sign Up overlay ---- */
