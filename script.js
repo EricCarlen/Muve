@@ -392,7 +392,7 @@ function parseSingleExerciseLine(line) {
     if (repsMatch) {
         const reps = repsMatch[0].replace(/\s+/g, "");
         const name = clean.replace(repsMatch[0], "").replace(/[-–,]\s*$/, "").trim();
-        return { id: generateStepId(), name: name || clean, mode: "reps", reps, duration: 40, tip: "", restOverride: null };
+        return { id: generateStepId(), name: name || clean, mode: "reps", reps, duration: 40, tip: "", restOverride: null, trackPerformance: true };
     }
 
     const timeMatch = clean.match(TIME_PATTERN);
@@ -401,12 +401,12 @@ function parseSingleExerciseLine(line) {
             ? parseInt(timeMatch[1], 10) * 60 + (timeMatch[2] ? parseInt(timeMatch[2], 10) : 0)
             : parseInt(timeMatch[3], 10);
         const name = clean.replace(timeMatch[0], "").replace(/[-–,]\s*$/, "").trim();
-        return { id: generateStepId(), name: name || clean, mode: "time", reps: "", duration: seconds, tip: "", restOverride: null };
+        return { id: generateStepId(), name: name || clean, mode: "time", reps: "", duration: seconds, tip: "", restOverride: null, trackPerformance: true };
     }
 
     // No recognisable count in the line — default to a 40s timed entry;
     // easy to switch to Reps and fix up afterward if that's wrong.
-    return { id: generateStepId(), name: clean, mode: "time", reps: "", duration: 40, tip: "", restOverride: null };
+    return { id: generateStepId(), name: clean, mode: "time", reps: "", duration: 40, tip: "", restOverride: null, trackPerformance: true };
 }
 
 function generateStepId() {
@@ -854,11 +854,17 @@ function closeWorkout() {
 //   { "sec1::1::ex3": { weight: 20, reps: 10 }, ... }
 // ============================================================
 function performanceKey(sectionId, round, exerciseId) {
+    // exerciseId (from generateStepId) is already globally unique per
+    // exercise, so sectionId isn't needed for uniqueness — and it's kept
+    // as an unused parameter only so every call site stays unchanged.
+    // This must match how window.loadPreviousPerformance() in auth.js
+    // builds its keys.
     return `${round}::${exerciseId}`;
 }
 
 function renderPerformanceFields(step, sectionId, round) {
     if (step.mode !== "reps" || !step.id) return "";
+    if (step.trackPerformance === false) return ""; // opted out — e.g. a stretch or mobility move
 
     const key = performanceKey(sectionId, round, step.id);
     const prev = previousPerformanceMap[key];
@@ -926,6 +932,7 @@ function buildPerformanceEntries(workout) {
         if (!logged || (logged.weight === undefined || logged.weight === "") && (logged.reps === undefined || logged.reps === "")) return;
 
         entries.push({
+            sectionId: step.sectionId || null,
             sectionName: step.sectionName,
             round: step.sectionRound,
             totalRounds: step.sectionRounds,
@@ -1262,7 +1269,8 @@ function normalizeSectionsForBuilder(w) {
             exercises: (sec.exercises || []).map(ex => ({
                 id: ex.id || generateStepId(),
                 ...ex,
-                mode: ex.mode || (ex.reps ? "reps" : "time")
+                mode: ex.mode || (ex.reps ? "reps" : "time"),
+                trackPerformance: ex.trackPerformance !== false
             }))
         }));
     }
@@ -1274,7 +1282,8 @@ function normalizeSectionsForBuilder(w) {
             exercises: w.steps.filter(s => s.name !== "Rest").map(s => ({
                 id: s.id || generateStepId(),
                 ...s,
-                mode: s.mode || (s.reps ? "reps" : "time")
+                mode: s.mode || (s.reps ? "reps" : "time"),
+                trackPerformance: s.trackPerformance !== false
             }))
         }];
     }
@@ -1384,6 +1393,12 @@ function renderBuilderExerciseRow(step, si, ei) {
                 <input type="number" min="0" class="builder-input rest-input" placeholder="Rest override (s)" value="${step.restOverride ?? ""}" oninput="updateStepField(${si}, ${ei}, 'restOverride', this.value)">
                 <input type="text" class="builder-input tip-input" placeholder="Optional tip, e.g. &quot;Keep chest tall&quot;"
                        value="${escapeAttrValue(step.tip)}" oninput="updateStepField(${si}, ${ei}, 'tip', this.value)">
+                ${step.mode === "reps" ? `
+                <label class="track-perf-toggle">
+                    <input type="checkbox" ${step.trackPerformance === false ? "" : "checked"}
+                           onchange="updateStepField(${si}, ${ei}, 'trackPerformance', this.checked)">
+                    Log weight &amp; reps for this exercise
+                </label>` : ""}
             </div>
             <div class="builder-row-actions">
                 <button class="reorder-btn" onclick="moveStepWithinSection(${si}, ${ei}, -1)" title="Move up">&#9650;</button>
@@ -1422,7 +1437,7 @@ function updateStepField(si, ei, field, value) {
 }
 
 function addBlankExerciseRow(si) {
-    builderState.sections[si].exercises.push({ id: generateStepId(), name: "", mode: "reps", reps: "", duration: 40, tip: "", restOverride: null });
+    builderState.sections[si].exercises.push({ id: generateStepId(), name: "", mode: "reps", reps: "", duration: 40, tip: "", restOverride: null, trackPerformance: true });
     renderBuilder();
 }
 
@@ -1508,7 +1523,8 @@ async function saveBuilder() {
                 duration: Number(s.duration) || 40,
                 reps: s.mode === "reps" ? (s.reps || "") : "",
                 tip: s.tip || "",
-                restOverride: (s.restOverride === null || s.restOverride === undefined || s.restOverride === "") ? null : Number(s.restOverride)
+                restOverride: (s.restOverride === null || s.restOverride === undefined || s.restOverride === "") ? null : Number(s.restOverride),
+                trackPerformance: s.trackPerformance !== false
             }))
         }))
     };

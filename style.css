@@ -161,9 +161,12 @@ button:hover {
 
 .my-workout-btn span:first-child {
     flex: 1;
+    min-width: 0;
     text-align: left;
     padding-left: 0;
     font-size: 0.7rem;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 .my-workout-btn.create-btn {
@@ -182,6 +185,7 @@ button:hover {
 .filter-btn {
     all: unset;
     width: 100%;          /* Forces the button to stay inside the grid cell */
+    min-width: 0;         /* Lets the button shrink below its text's natural width — without this, a grid item won't shrink past its content's min-content size, which is what pushes long titles past the edge */
     aspect-ratio: 3.236 / 1;
     display: flex;
     flex-direction: row;
@@ -698,6 +702,33 @@ input:checked + .slider:before { transform: translateX(26px); }
     }
 }
 
+/* Smaller, tighter My Workouts buttons on phones — easier to tell apart
+   and tap precisely than the desktop-sized pills. */
+@media (max-width: 480px) {
+    .category-grid {
+        gap: 10px;
+        width: 94%;
+    }
+
+    .my-workout-btn {
+        min-height: 40px;
+        padding: 8px 10px;
+    }
+
+    .my-workout-btn span:first-child {
+        font-size: 0.6rem;
+    }
+
+    .workout-btn-icons {
+        gap: 4px;
+    }
+
+    .edit-workout-btn,
+    .delete-workout-btn {
+        font-size: 0.75rem;
+    }
+}
+
 /* ---- Decorative background stick figures ---- */
 .bg-figures {
     position: fixed;
@@ -1173,6 +1204,24 @@ body {
     margin-top: 4px;
     font-size: 0.75rem;
     color: #666;
+}
+
+.track-perf-toggle {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    font-size: 0.7rem;
+    color: #666;
+    cursor: pointer;
+}
+
+.track-perf-toggle input {
+    width: 15px;
+    height: 15px;
+    margin: 0;
+    flex: none;
 }
 
 .builder-row-actions {
