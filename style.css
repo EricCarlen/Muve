@@ -152,7 +152,7 @@ button:hover {
 }
 
 /* My Workouts buttons have no icon, so they lay out as simple text pills */
-.my-workout-btn {
+.filter-btn.my-workout-btn {
     aspect-ratio: auto;
     min-height: 50px;
     padding: 12px 16px;
@@ -172,6 +172,15 @@ button:hover {
 .my-workout-btn.create-btn {
     border-style: dashed;
     color: #007a63;
+}
+
+.my-workout-btn.breathing-btn {
+    border-style: dashed;
+    color: #00b894;
+}
+
+.my-workout-btn.breathing-btn span:first-child {
+    text-align: center;
 }
 
 .delete-workout-btn {
@@ -428,6 +437,48 @@ button:hover {
 
 .history-row:hover {
     opacity: 0.6;
+}
+
+/* ---- Progress charts (per exercise, in Workout History → View Progress) ---- */
+.progress-chart-block {
+    width: 100%;
+    max-width: 340px;
+    margin: 0 auto 28px;
+    text-align: left;
+}
+
+.progress-chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+}
+
+.progress-chart-name {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.progress-chart-latest {
+    font-size: 0.7rem;
+    color: #888;
+}
+
+.progress-chart-svg {
+    width: 100%;
+    height: 100px;
+    display: block;
+}
+
+.progress-chart-line {
+    stroke: #00b894;
+    stroke-width: 2;
+}
+
+.progress-chart-svg circle {
+    fill: #000;
 }
 
 /* ==========================================================================
@@ -710,7 +761,7 @@ input:checked + .slider:before { transform: translateX(26px); }
         width: 94%;
     }
 
-    .my-workout-btn {
+    .filter-btn.my-workout-btn {
         min-height: 40px;
         padding: 8px 10px;
     }
@@ -1169,6 +1220,62 @@ body {
 
 .tag-add-row .builder-input {
     flex: 1;
+}
+
+.builder-section-block {
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 18px;
+}
+
+.section-header-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.section-header-row .section-name-input {
+    flex: 1;
+    min-width: 140px;
+}
+
+.section-repeat-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.7rem;
+    color: #666;
+    flex: none;
+    white-space: nowrap;
+}
+
+.section-repeat-row .repeat-input {
+    width: 55px;
+    padding: 6px 4px;
+    text-align: center;
+}
+
+.section-move-buttons {
+    display: flex;
+    gap: 2px;
+    flex: none;
+}
+
+.section-move-buttons .reorder-btn {
+    font-size: 0.75rem;
+    padding: 4px;
+}
+
+.section-move-buttons .reorder-btn:disabled {
+    color: #ddd;
+    cursor: default;
+}
+
+.builder-paste-row {
+    margin-bottom: 10px;
 }
 
 .builder-row {

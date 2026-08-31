@@ -947,24 +947,46 @@ function buildPerformanceEntries(workout) {
 }
 
 // List mode's explicit "end of workout" action — saves whatever was
-// logged as a completed history session, then closes the overlay.
+// logged as a completed history session, then offers Breathing as a
+// cool-down before closing (mirrors Timed mode's completion screen).
 async function finishAndSaveWorkout() {
     const workout = getActiveWorkout();
     if (!workout) { closeWorkout(); return; }
 
     const durationSeconds = workoutStartTime ? Math.round((Date.now() - workoutStartTime) / 1000) : 0;
-    await saveWorkoutSession(workout, durationSeconds);
-    closeWorkout();
+    await persistWorkoutSession(workout, durationSeconds);
+    showWorkoutSavedScreen(workout);
+}
+
+function showWorkoutSavedScreen(workout) {
+    document.querySelector(".timer-container").style.display = "none";
+    document.querySelector(".workout-controls").style.display = "none";
+    document.getElementById("overlay-content").innerHTML = `
+        <div style="text-align:center; padding: 50px;">
+            <h2>Workout Saved!</h2>
+            <div class="workout-link-container" style="border-top:none; padding-top:0;">
+                <button class="link-btn" onclick="openBreathing()">&#129496; Breathing</button>
+                <button class="filter-btn" onclick="closeWorkout()">Finish</button>
+                ${workout && workout.next && WORKOUTS[workout.next] ? `<button class="link-btn" onclick="filterWorkouts('${workout.next}')">Next: ${WORKOUTS[workout.next].title} <span>&#8594;</span></button>` : ""}
+            </div>
+        </div>`;
 }
 
 // Timed mode's natural "end of workout" moment — called from
 // goToNextStep once the step list is exhausted.
 async function saveTimedWorkoutSession(workout) {
     if (!workout || !workout.isCustom) return;
-    await saveWorkoutSession(workout, elapsed);
+    await persistWorkoutSession(workout, elapsed);
 }
 
-async function saveWorkoutSession(workout, durationSeconds) {
+// Deliberately NOT named saveWorkoutSession — that name belongs to
+// window.saveWorkoutSession (defined in auth.js), and script.js is a
+// plain non-module script that runs before auth.js's deferred module
+// finishes executing. A same-named top-level function here would get
+// silently overwritten by auth.js's version on `window`, and every call
+// site below would end up calling auth.js's function with the wrong
+// arguments instead of this one.
+async function persistWorkoutSession(workout, durationSeconds) {
     if (!workout || !workout.isCustom || !window.saveWorkoutSession) return;
 
     const performance = buildPerformanceEntries(workout);
@@ -1121,6 +1143,10 @@ function renderMyWorkoutsSection() {
                     </span>
                  </button>`;
     });
+
+    html += `<button class="filter-btn my-workout-btn breathing-btn" onclick="openBreathing()">
+                <span>&#129496; Breathing</span>
+             </button>`;
 
     html += `<button class="filter-btn my-workout-btn create-btn" onclick="openCreateWorkoutBuilder()">
                 <span>+ Create Workout</span>
@@ -1346,6 +1372,8 @@ function renderBuilder() {
 function renderBuilderSection(section, si) {
     const exercisesHtml = section.exercises.map((ex, ei) => renderBuilderExerciseRow(ex, si, ei)).join("");
     const canDelete = builderState.sections.length > 1;
+    const isFirst = si === 0;
+    const isLast = si === builderState.sections.length - 1;
 
     return `
         <div class="builder-section-block">
@@ -1356,6 +1384,10 @@ function renderBuilderSection(section, si) {
                     <label>Repeat ×</label>
                     <input type="number" min="1" class="builder-input repeat-input" value="${section.repeat}"
                            oninput="updateSectionField(${si}, 'repeat', this.value)">
+                </div>
+                <div class="section-move-buttons">
+                    <button class="reorder-btn" onclick="moveSectionInBuilder(${si}, -1)" title="Move section up" ${isFirst ? "disabled" : ""}>&#9650;</button>
+                    <button class="reorder-btn" onclick="moveSectionInBuilder(${si}, 1)" title="Move section down" ${isLast ? "disabled" : ""}>&#9660;</button>
                 </div>
                 ${canDelete ? `<button class="delete-btn" onclick="deleteSectionFromBuilder(${si})" title="Delete section">&times;</button>` : ""}
             </div>
@@ -1411,6 +1443,14 @@ function renderBuilderExerciseRow(step, si, ei) {
 
 function addSectionToBuilder() {
     builderState.sections.push({ id: generateStepId(), name: "", repeat: 1, exercises: [] });
+    renderBuilder();
+}
+
+function moveSectionInBuilder(si, direction) {
+    const sections = builderState.sections;
+    const newIndex = si + direction;
+    if (newIndex < 0 || newIndex >= sections.length) return;
+    [sections[si], sections[newIndex]] = [sections[newIndex], sections[si]];
     renderBuilder();
 }
 
@@ -1604,6 +1644,7 @@ async function openHistoryDetail(sessionId) {
     let html = `<div class="set-counter">${dateStr} · ${formatDuration(session.durationSeconds || 0)}</div>`;
     html += `<div class="add-exercise-row">
                 <button class="link-btn small" onclick="openHistory()">&#8592; Back to History</button>
+                ${session.workoutId ? `<button class="link-btn small" onclick="openWorkoutProgress('${session.workoutId}', '${escapeForAttr(session.workoutTitle || "Workout")}')">&#128200; View Progress</button>` : ""}
              </div>`;
 
     const entries = session.performance || [];
@@ -1639,6 +1680,105 @@ function formatHistoryDate(completedAt) {
     return completedAt && completedAt.toDate
         ? completedAt.toDate().toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })
         : "";
+}
+
+// ============================================================
+// PROGRESS — a weight-over-time line chart per exercise, built from the
+// user's Workout History for one specific saved workout. Hand-drawn as
+// inline SVG (no charting library needed) to stay consistent with the
+// stick-figure SVGs already used elsewhere in the app.
+// ============================================================
+async function openWorkoutProgress(workoutId, workoutTitle) {
+    currentCategory = "";
+    currentCustomWorkoutId = null;
+    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+
+    const overlay = document.getElementById("workout-overlay");
+    overlay.classList.add("active");
+    overlay.style.display = "flex";
+    document.querySelector(".timer-container").style.display = "none";
+    document.querySelector(".workout-controls").style.display = "none";
+    document.getElementById("overlay-title").innerText = `${workoutTitle} — Progress`;
+    document.getElementById("overlay-content").innerHTML = `<p style="padding:40px 0; color:#888; text-align:center;">Loading…</p>`;
+
+    const allSessions = window.loadWorkoutHistoryList ? await window.loadWorkoutHistoryList() : [];
+    const sessions = allSessions
+        .filter(s => s.workoutId === workoutId)
+        .sort((a, b) => historyMillis(a.completedAt) - historyMillis(b.completedAt)); // oldest first, so the chart reads left-to-right
+
+    let html = `<div class="add-exercise-row">
+                    <button class="link-btn small" onclick="openHistory()">&#8592; Back to History</button>
+                 </div>`;
+
+    const byExercise = groupPerformanceByExercise(sessions);
+    const exerciseNames = Object.keys(byExercise);
+
+    if (!exerciseNames.length) {
+        html += `<p style="padding:20px 0; color:#888; text-align:center;">No logged weights yet for this workout — progress charts fill in once you log a few sessions.</p>`;
+    } else {
+        exerciseNames.forEach(name => {
+            html += renderProgressChart(name, byExercise[name]);
+        });
+    }
+
+    document.getElementById("overlay-content").innerHTML = html;
+}
+
+function historyMillis(completedAt) {
+    return completedAt && completedAt.toDate ? completedAt.toDate().getTime() : 0;
+}
+
+// Flattens every session's logged performance into
+// { exerciseName: [{ date, weight, reps }, ...] }, oldest first, keeping
+// only points where a weight was actually logged (bodyweight/no-weight
+// exercises have nothing meaningful to chart here).
+function groupPerformanceByExercise(sessions) {
+    const byExercise = {};
+    sessions.forEach(session => {
+        const date = session.completedAt && session.completedAt.toDate ? session.completedAt.toDate() : null;
+        (session.performance || []).forEach(entry => {
+            if (entry.weight == null || !entry.exerciseName) return;
+            if (!byExercise[entry.exerciseName]) byExercise[entry.exerciseName] = [];
+            byExercise[entry.exerciseName].push({ date, weight: entry.weight, reps: entry.reps });
+        });
+    });
+    return byExercise;
+}
+
+function renderProgressChart(exerciseName, points) {
+    const width = 300, height = 100, padX = 12, padY = 14;
+    const weights = points.map(p => p.weight);
+    const min = Math.min(...weights);
+    const max = Math.max(...weights);
+    const range = max - min || 1; // avoid divide-by-zero when every logged weight is identical
+
+    const coords = points.map((p, i) => {
+        const x = points.length === 1 ? width / 2 : padX + (i / (points.length - 1)) * (width - padX * 2);
+        const y = height - padY - ((p.weight - min) / range) * (height - padY * 2);
+        return { x, y, p };
+    });
+
+    const linePath = coords.map((c, i) => `${i === 0 ? "M" : "L"}${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(" ");
+    const dots = coords.map(c => {
+        const dateStr = c.p.date ? c.p.date.toLocaleDateString(undefined, { day: "numeric", month: "short" }) : "";
+        const label = escapeAttrValue(`${c.p.weight}kg${c.p.reps != null ? " × " + c.p.reps + " reps" : ""} — ${dateStr}`);
+        return `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="3.5"><title>${label}</title></circle>`;
+    }).join("");
+
+    const latest = points[points.length - 1];
+    const latestLabel = `${latest.weight}kg${latest.reps != null ? " × " + latest.reps : ""}`;
+
+    return `
+        <div class="progress-chart-block">
+            <div class="progress-chart-header">
+                <span class="progress-chart-name">${exerciseName}</span>
+                <span class="progress-chart-latest">${latestLabel}</span>
+            </div>
+            <svg viewBox="0 0 ${width} ${height}" class="progress-chart-svg" preserveAspectRatio="none">
+                <path d="${linePath}" fill="none" class="progress-chart-line"/>
+                ${dots}
+            </svg>
+        </div>`;
 }
 
 // ============================================================
@@ -1781,6 +1921,7 @@ function goToNextStep() {
             <div style="text-align:center; padding: 50px;">
                 <h2>Workout Complete!</h2>
                 <div class="workout-link-container" style="border-top:none; padding-top:0;">
+                    <button class="link-btn" onclick="openBreathing()">&#129496; Breathing</button>
                     <button class="filter-btn" onclick="closeWorkout()">Finish</button>
                     ${workout && workout.next ? `<button class="link-btn" onclick="filterWorkouts('${workout.next}')">Next: ${WORKOUTS[workout.next].title} <span>&#8594;</span></button>` : ""}
                 </div>
