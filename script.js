@@ -413,6 +413,15 @@ function generateStepId() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
 
+// A section header is only worth showing when it says something —
+// either it has a real, custom name, or the section repeats (in which
+// case "Round 2 of 3" is genuinely useful even without a name). A blank
+// name, or the old generic default "Exercises", prints nothing.
+function shouldShowSectionHeader(sectionName, sectionRounds) {
+    const hasRealName = sectionName && sectionName.trim() && sectionName.trim().toLowerCase() !== "exercises";
+    return hasRealName || sectionRounds > 1;
+}
+
 function escapeForAttr(str) {
     return String(str || "").replace(/'/g, "\\'");
 }
@@ -482,7 +491,7 @@ function ensureAudioContext() {
     return audioCtx;
 }
 
-function playBeep(frequency = 880, durationMs = 150, volume = 0.15) {
+function playBeep(frequency = 880, durationMs = 150, volume = 0.15, echo = false) {
     const ctx = ensureAudioContext();
     if (!ctx) return;
     try {
@@ -493,13 +502,42 @@ function playBeep(frequency = 880, durationMs = 150, volume = 0.15) {
         gain.gain.setValueAtTime(volume, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + durationMs / 1000);
         osc.connect(gain);
-        gain.connect(ctx.destination);
+        gain.connect(ctx.destination); // dry signal always plays
+
+        if (echo) {
+            // A short feedback delay loop — a cheap, dependency-free stand-in
+            // for reverb that still gives a real sense of "echo" without
+            // needing an impulse-response file.
+            const delay = ctx.createDelay();
+            delay.delayTime.value = 0.14;
+            const feedback = ctx.createGain();
+            feedback.gain.value = 0.35; // how much each repeat decays
+            const wet = ctx.createGain();
+            wet.gain.value = 0.5;
+
+            gain.connect(delay);
+            delay.connect(feedback);
+            feedback.connect(delay); // feeds back into itself for repeats
+            delay.connect(wet);
+            wet.connect(ctx.destination);
+        }
+
         osc.start();
-        osc.stop(ctx.currentTime + durationMs / 1000);
+        osc.stop(ctx.currentTime + durationMs / 1000 + (echo ? 0.6 : 0));
     } catch (e) {
         // Audio isn't available in this browser/context — fail silently,
         // a missing beep shouldn't break the workout.
     }
+}
+
+// A quick alternating trill to mark a breathing session finishing
+// naturally (time ran out) — distinct from the plain inhale/exhale beeps
+// so it reads as "done", not just another breath cue.
+function playCompletionTrill() {
+    const notes = [880, 1175, 880, 1175];
+    notes.forEach((freq, i) => {
+        setTimeout(() => playBeep(freq, 90, 0.3), i * 90);
+    });
 }
 
 // ============================================================
@@ -593,7 +631,7 @@ function getActiveWorkout() {
 function normalizeSectionsForRun(w) {
     if (Array.isArray(w.sections)) return w.sections;
     if (Array.isArray(w.steps)) {
-        return [{ name: "Exercises", repeat: 1, exercises: w.steps.filter(s => s.name !== "Rest") }];
+        return [{ name: "", repeat: 1, exercises: w.steps.filter(s => s.name !== "Rest") }];
     }
     return [];
 }
@@ -711,10 +749,12 @@ function renderListSteps(workout) {
     flatSteps.forEach(step => {
         const groupKey = `${step.sectionId || step.sectionName}|${step.sectionRound}`;
         if (groupKey !== lastGroupKey) {
-            const label = step.sectionRounds > 1
-                ? `${step.sectionName} — Round ${step.sectionRound} of ${step.sectionRounds}`
-                : step.sectionName;
-            html += `<h3 class="workout-section-title">${label}</h3>`;
+            if (shouldShowSectionHeader(step.sectionName, step.sectionRounds)) {
+                const label = step.sectionRounds > 1
+                    ? `${step.sectionName} — Round ${step.sectionRound} of ${step.sectionRounds}`
+                    : step.sectionName;
+                html += `<h3 class="workout-section-title">${label}</h3>`;
+            }
             lastGroupKey = groupKey;
         }
 
@@ -764,10 +804,12 @@ function renderTimedSteps() {
 
         const groupKey = `${step.sectionId || step.sectionName}|${step.sectionRound}`;
         if (groupKey !== lastGroupKey) {
-            const label = step.sectionRounds > 1
-                ? `${step.sectionName} — Round ${step.sectionRound} of ${step.sectionRounds}`
-                : step.sectionName;
-            html += `<h3 class="workout-section-title">${label}</h3>`;
+            if (shouldShowSectionHeader(step.sectionName, step.sectionRounds)) {
+                const label = step.sectionRounds > 1
+                    ? `${step.sectionName} — Round ${step.sectionRound} of ${step.sectionRounds}`
+                    : step.sectionName;
+                html += `<h3 class="workout-section-title">${label}</h3>`;
+            }
             lastGroupKey = groupKey;
         }
 
@@ -1262,7 +1304,7 @@ function openCreateWorkoutBuilder() {
     }
     builderState = {
         id: null, title: "", subtitle: "Your custom workout", tags: [], defaultRest: 15,
-        sections: [{ id: generateStepId(), name: "Exercises", repeat: 1, exercises: [] }]
+        sections: [{ id: generateStepId(), name: "", repeat: 1, exercises: [] }]
     };
     openBuilderOverlay("Create Workout");
 }
@@ -1290,7 +1332,7 @@ function normalizeSectionsForBuilder(w) {
     if (Array.isArray(w.sections)) {
         return w.sections.map(sec => ({
             id: sec.id || generateStepId(),
-            name: sec.name || "Exercises",
+            name: sec.name || "",
             repeat: sec.repeat || 1,
             exercises: (sec.exercises || []).map(ex => ({
                 id: ex.id || generateStepId(),
@@ -1303,7 +1345,7 @@ function normalizeSectionsForBuilder(w) {
     if (Array.isArray(w.steps)) {
         return [{
             id: generateStepId(),
-            name: "Exercises",
+            name: "",
             repeat: 1,
             exercises: w.steps.filter(s => s.name !== "Rest").map(s => ({
                 id: s.id || generateStepId(),
@@ -1313,7 +1355,7 @@ function normalizeSectionsForBuilder(w) {
             }))
         }];
     }
-    return [{ id: generateStepId(), name: "Exercises", repeat: 1, exercises: [] }];
+    return [{ id: generateStepId(), name: "", repeat: 1, exercises: [] }];
 }
 
 function openBuilderOverlay(title) {
@@ -1554,7 +1596,7 @@ async function saveBuilder() {
         defaultRest: builderState.defaultRest,
         sections: builderState.sections.map(sec => ({
             id: sec.id,
-            name: sec.name || "Exercises",
+            name: sec.name || "",
             repeat: Math.max(1, Number(sec.repeat) || 1),
             exercises: sec.exercises.map(s => ({
                 id: s.id,
@@ -1656,10 +1698,12 @@ async function openHistoryDetail(sessionId) {
         entries.forEach(entry => {
             const groupKey = `${entry.sectionName}|${entry.round}`;
             if (groupKey !== lastGroupKey) {
-                const label = entry.totalRounds > 1
-                    ? `${entry.sectionName} — Round ${entry.round} of ${entry.totalRounds}`
-                    : entry.sectionName;
-                html += `<h3 class="workout-section-title">${label}</h3>`;
+                if (shouldShowSectionHeader(entry.sectionName, entry.totalRounds)) {
+                    const label = entry.totalRounds > 1
+                        ? `${entry.sectionName} — Round ${entry.round} of ${entry.totalRounds}`
+                        : entry.sectionName;
+                    html += `<h3 class="workout-section-title">${label}</h3>`;
+                }
                 lastGroupKey = groupKey;
             }
 
@@ -1830,7 +1874,7 @@ function startBreathing() {
 }
 
 function runBreathingPhase(phase) {
-    if (Date.now() >= breathingEndTime) { stopBreathing(); return; }
+    if (Date.now() >= breathingEndTime) { finishBreathingSession(); return; }
 
     const visual = document.getElementById("breathing-visual");
     const label = document.getElementById("breathing-phase-label");
@@ -1838,12 +1882,12 @@ function runBreathingPhase(phase) {
     if (phase === "in") {
         label.innerText = "Breathe In";
         visual.classList.add("inhale");
-        playBeep(660, 180, 0.12);
+        playBeep(660, 180, 0.3, true);
         breathingPhaseTimeout = setTimeout(() => runBreathingPhase("out"), 5000);
     } else {
         label.innerText = "Breathe Out";
         visual.classList.remove("inhale");
-        playBeep(330, 180, 0.12);
+        playBeep(330, 180, 0.3, true);
         breathingPhaseTimeout = setTimeout(() => runBreathingPhase("in"), 5000);
     }
 }
@@ -1854,7 +1898,14 @@ function updateBreathingCountdown() {
     const s = remaining % 60;
     const timeEl = document.getElementById("breathing-time-left");
     if (timeEl) timeEl.innerText = `${m}:${s < 10 ? "0" + s : s} left`;
-    if (remaining <= 0) stopBreathing();
+    if (remaining <= 0) finishBreathingSession();
+}
+
+// Session ran its full course (as opposed to the user tapping Stop) —
+// stop as normal, plus a short trill so it's clearly "done".
+function finishBreathingSession() {
+    stopBreathing();
+    playCompletionTrill();
 }
 
 function stopBreathing() {
